@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chatbot Tư Vấn Nhà Phố — Improved</title>
+<style>
+  :root{ --bg:#f5f7fb; --accent:#0ea5e9; --muted:#6b7280; }
+  body{ font-family:Inter, Arial, sans-serif; background:var(--bg); margin:0; padding:24px; display:flex; justify-content:center; }
+  .chat-wrap{ width:100%; max-width:480px; background:#fff; border-radius:12px; box-shadow:0 8px 30px rgba(2,6,23,0.08); overflow:hidden; }
+  header.chat-header{ padding:14px 16px; background:linear-gradient(90deg,#e6f6ff,#f8fbff); display:flex; align-items:center; gap:12px; }
+  header.chat-header h1{ font-size:16px; margin:0; }
+  #messages{ height:420px; overflow:auto; padding:14px; background:linear-gradient(180deg, #ffffff, #fbfdff); }
+  .msg{ max-width:86%; margin:8px 0; padding:10px 12px; border-radius:10px; line-height:1.3; }
+  .bot{ background:#f1f8ff; color:#04324a; align-self:flex-start; border-top-left-radius:4px; }
+  .user{ background:linear-gradient(180deg,#0ea5e9,#0284c7); color:white; align-self:flex-end; text-align:right; }
+  .meta{ font-size:11px; color:var(--muted); margin-top:6px; }
+  .quick-list{ padding:8px 0; display:flex; flex-wrap:wrap; gap:8px; }
+  .quick{ background:#eef6ff; border:1px solid rgba(2,132,199,0.08); color:#0369a1; padding:6px 10px; border-radius:8px; cursor:pointer; font-size:13px; }
+  .controls{ display:flex; gap:8px; padding:12px; border-top:1px solid #eef2f7; }
+  .controls input{ flex:1; padding:10px 12px; border:1px solid #e6eef7; border-radius:8px; outline:none; }
+  .controls button{ padding:9px 12px; border-radius:8px; border:none; background:var(--accent); color:#fff; cursor:pointer; }
+  .small-muted{ font-size:12px; color:var(--muted); padding:6px 12px; }
+  @media (max-width:420px){ #messages{ height:360px } }
+</style>
+</head>
+<body>
+<div class="chat-wrap" role="region" aria-label="Chatbot tư vấn nhà phố">
+  <header class="chat-header">
+    <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#0ea5e9,#0369a1);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;">A</div>
+    <div>
+      <h1>Trợ lý Tư vấn Nhà Phố</h1>
+      <div class="small-muted">Hỏi nhanh, nhận gợi ý và báo cáo AHP</div>
+    </div>
+  </header>
+
+  <div id="messages" aria-live="polite"></div>
+
+  <div class="controls" role="form">
+    <input id="userInput" placeholder="Nhập câu hỏi, hoặc bấm một gợi ý..." aria-label="Nội dung tin nhắn" />
+    <button id="sendBtn">Gửi</button>
+  </div>
+</div>
+
+<script>
+// Improved chatbot: intents, simple fuzzy check, flow state, quick replies, capture info and generate CSV report
+
+const state = { expecting: null, temp: {} };
+const messagesEl = document.getElementById('messages');
+const inputEl = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendBtn');
+
+function addMessage(text, from='bot', options={html:false}){
+  const wrap = document.createElement('div');
+  wrap.style.display = 'flex';
+  wrap.style.flexDirection = 'column';
+  wrap.style.alignItems = from === 'user' ? 'flex-end' : 'flex-start';
+  const node = document.createElement('div');
+  node.className = 'msg ' + (from==='user' ? 'user' : 'bot');
+  if(options.html) node.innerHTML = text; else node.textContent = text;
+  wrap.appendChild(node);
+  if(options.meta){ const m = document.createElement('div'); m.className='meta'; m.textContent = options.meta; wrap.appendChild(m); }
+  messagesEl.appendChild(wrap);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function renderQuick(choices=[]){
+  if(!choices || choices.length===0) return;
+  const container = document.createElement('div');
+  container.className = 'quick-list';
+  choices.forEach(c=>{
+    const btn = document.createElement('button');
+    btn.className = 'quick';
+    btn.type='button';
+    btn.textContent = c.title || c;
+    btn.addEventListener('click', ()=> handleUserText(c.payload || c.title || c));
+    container.appendChild(btn);
+  });
+  const wrap = document.createElement('div');
+  wrap.appendChild(container);
+  messagesEl.appendChild(wrap);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+// Basic intents with patterns (regex or substring) and actions
+const INTENTS = [
+  {name:'greeting', patterns:[/^(hi|xin chào|chào)/i], reply:'Xin chào 👋! Tôi có thể giúp gì cho bạn?', quick:['💰 Giá|PRICE','📍 Vị trí|LOCATION','📄 Pháp lý|LEGAL','🏠 Chọn nhà|CHOOSING','📩 Nhận báo cáo|GET_REPORT']},
+  {name:'price', patterns:[/giá|bao nhiêu|mấy tỷ|tiền/iu], reply:'💰 Giá nhà phụ thuộc vị trí, diện tích và pháp lý. Bạn muốn báo giá theo khu vực hay theo ngân sách?', quick:['Nhập khu vực|ASK_AREA','Nhập ngân sách|ASK_BUDGET','Nhận báo cáo|GET_REPORT']},
+  {name:'location', patterns:[/vị trí|khu vực|quận|khu/iu], reply:'📍 Vị trí tốt là nơi có giao thông thuận tiện và gần tiện ích. Bạn đang quan tâm quận/khu nào?', quick:['Quận 1','Quận 7','Thủ Đức','Bình Tân']},
+  {name:'legal', patterns:[/pháp lý|sổ|quy hoạch|tranh chấp/iu], reply:'📄 Khi mua cần kiểm tra: sổ (sổ hồng), quy hoạch, lịch sử giao dịch. Bạn muốn mình hướng dẫn chi tiết hay kiểm tra hồ sơ?', quick:['Hướng dẫn|LEGAL_GUIDE','Kiểm tra hồ sơ|LEGAL_CHECK']},
+  {name:'loan', patterns:[/vay|lãi suất|vốn/iu], reply:'🏦 Thông thường vay 50-80% tùy thu nhập và hồ sơ. Muốn mình ước tính khoản trả góp không?', quick:['Ước tính vay|CALC_LOAN']},
+  {name:'choose', patterns:[/chọn nhà|nên mua|lựa chọn/iu], reply:'🏠 Mình cần: ngân sách, khu vực và mục đích (ở/đầu tư). Cho mình biết ngân sách trước nhé?', quick:['Nhập ngân sách|ASK_BUDGET','Nhập khu vực|ASK_AREA']},
+  {name:'fallback', patterns:[/.*/], reply:'Mình chưa rõ lắm. Bạn thử chọn một gợi ý sau hoặc mô tả rõ hơn (ví dụ: "Giá Quận 7 4 tỷ").', quick:['💰 Giá|PRICE','📍 Vị trí|LOCATION','📩 Nhận báo cáo|GET_REPORT']}
+];
+
+// Simple pattern matching: test regex or substring
+function matchIntent(text){
+  const t = text.toLowerCase();
+  for(const it of INTENTS){
+    for(const p of it.patterns){
+      if(typeof p === 'string' && t.includes(p)) return it;
+      if(p instanceof RegExp && p.test(text)) return it;
+    }
+  }
+  return INTENTS.find(i=>i.name==='fallback');
+}
+
+// Flow helpers: prompt for info and capture
+function askFor(field){ state.expecting = field; }
+
+function handleUserText(raw){
+  const text = (raw || inputEl.value || '').trim();
+  if(!text) return;
+  addMessage(text, 'user');
+  inputEl.value = '';
+
+  // If expecting a field, capture
+  if(state.expecting){
+    const f = state.expecting;
+    state.temp[f] = text;
+    state.expecting = null;
+    postCapture(f, text);
+    return;
+  }
+
+  // check for explicit commands like 'BUDGET_3_6' or 'GET_REPORT'
+  if(/^BUDGET_/i.test(text) || /^ASK_BUDGET$/i.test(text)){
+    addMessage('Vui lòng nhập khoảng ngân sách của bạn (ví dụ: 3-5 tỷ hoặc 4 tỷ).', 'bot');
+    askFor('budget');
+    return;
+  }
+  if(/^ASK_AREA$/i.test(text) || /quận|khu/i.test(text) && text.length<20){
+    addMessage('Bạn cho biết quận/khu vực (ví dụ: Quận 7, Bình Tân).', 'bot');
+    askFor('area');
+    return;
+  }
+  if(/^GET_REPORT$/i.test(text) || text.toLowerCase().includes('nhận báo cáo')){
+    // start report capture
+    addMessage('Để gửi báo cáo, vui lòng cho biết Họ và tên của bạn.', 'bot');
+    askFor('report_name');
+    return;
+  }
+
+  // otherwise, natural intent match
+  const intent = matchIntent(text);
+  if(!intent) return addMessage('Mình chưa hiểu rõ, bạn thử nói lại được không?', 'bot');
+
+  // Reply and render quick buttons
+  addMessage(intent.reply, 'bot');
+  if(intent.quick) {
+    const choices = intent.quick.map(q=>{
+      if(typeof q === 'string' && q.includes('|')){
+        const [title,payload] = q.split('|'); return { title:title.trim(), payload: payload.trim() };
+      }
+      return { title: q, payload: q };
+    });
+    renderQuick(choices);
+  }
+}
+
+function postCapture(field, value){
+  if(field === 'report_name'){
+    addMessage('Cảm ơn. SĐT để liên hệ?', 'bot');
+    askFor('report_phone');
+    return;
+  }
+  if(field === 'report_phone'){
+    state.temp.report_phone = value;
+    addMessage('Bạn muốn nhận báo cáo bằng cách nào?', 'bot');
+    renderQuick([
+      { title:'Tải xuống ngay', payload:'REPORT_DOWNLOAD' },
+      { title:'Gửi email (nếu có)', payload:'REPORT_EMAIL' }
+    ]);
+    return;
+  }
+  if(field === 'budget'){
+    addMessage('Đã nhận ngân sách: ' + value + '. Bạn muốn mình tìm nhà theo ngân sách này không?', 'bot');
+    renderQuick([{ title:'Tìm gợi ý', payload:'FIND_BY_BUDGET' }, { title:'Nhận báo cáo', payload:'GET_REPORT' }]);
+    return;
+  }
+  if(field === 'area'){
+    addMessage('Đã ghi khu vực: ' + value + '. Bạn muốn giá tham khảo hay gợi ý nhà?', 'bot');
+    renderQuick([{ title:'Giá tham khảo', payload:'PRICE' }, { title:'Gợi ý nhà', payload:'CHOOSING' }]);
+    return;
+  }
+}
+
+// Report actions: try server then fallback to client-side CSV
+async function generateReport(){
+  const name = state.temp.report_name || 'Khách';
+  const phone = state.temp.report_phone || '';
+  const weights = { price:0.33, l:0.34, f:0.33 };
+  // try server
+  try{
+    const resp = await fetch('/api/report', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, phone, weights, topN:5 }) });
+    if(resp.ok){
+      const j = await resp.json();
+      // decode csvBase64 and create download
+      if(j.csvBase64){
+        const blob = b64toBlob(j.csvBase64, 'text/csv');
+        triggerDownload(blob, `AHP_Report_${name.replace(/\s+/g,'_')}.csv`);
+        addMessage('Báo cáo đã được tạo và tải về.', 'bot');
+        return;
+      }
+    }
+  }catch(e){ /* ignore and fallback */ }
+
+  // fallback: generate CSV from messages (demo)
+  const rows = [['Tên','SĐT','Ghi chú'], [name, phone, 'Báo cáo mẫu - chưa kết nối server']];
+  const csv = rows.map(r=> r.map(c=> '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  triggerDownload(blob, `AHP_Report_${name.replace(/\s+/g,'_')}.csv`);
+  addMessage('Báo cáo mẫu đã được tạo (offline).', 'bot');
+}
+
+function b64toBlob(b64, mime){ const bin = atob(b64); const len = bin.length; const arr = new Uint8Array(len); for(let i=0;i<len;i++) arr[i]=bin.charCodeAt(i); return new Blob([arr], { type:mime }); }
+function triggerDownload(blob, filename){ const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
+
+// wire UI
+sendBtn.addEventListener('click', ()=> handleUserText());
+inputEl.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') handleUserText(); });
+
+// initial welcome
+addMessage('Xin chào 👋 Tôi là trợ lý tư vấn nhà phố. Bạn muốn tìm giá, vị trí, pháp lý hay nhận báo cáo?', 'bot');
+renderQuick([{ title:'💰 Giá', payload:'PRICE' },{ title:'📍 Vị trí', payload:'LOCATION' },{ title:'📄 Pháp lý', payload:'LEGAL' },{ title:'📩 Nhận báo cáo', payload:'GET_REPORT' }]);
+
+// listen for special payloads inserted by quick buttons
+// quick buttons call handleUserText(payload) already
+
+// handle certain command payloads
+const originalHandle = handleUserText;
+handleUserText = async function(raw){
+  const text = (raw || inputEl.value || '').trim();
+  if(!text) return;
+  // commands
+  if(/^REPORT_DOWNLOAD$/i.test(text)){
+    addMessage('Đang tạo báo cáo...','bot');
+    await generateReport();
+    return;
+  }
+  if(/^REPORT_EMAIL$/i.test(text)){
+    addMessage('Chức năng gửi email chưa bật trong demo. Bạn có thể tải báo cáo xuống.', 'bot');
+    return;
+  }
+  if(/^FIND_BY_BUDGET$/i.test(text)){
+    addMessage('Đang tìm gợi ý theo ngân sách... (demo)', 'bot');
+    setTimeout(()=> addMessage('Gợi ý: PA5 - Nhà Phố (Quận 7) — Giá 5.2 tỷ — Điểm 8.6', 'bot'), 600);
+    return;
+  }
+  // pass-through to original
+  originalHandle(text);
+};
+
+</script>
+</body>
+</html>

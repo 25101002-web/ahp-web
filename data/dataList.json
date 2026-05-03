@@ -1,0 +1,7 @@
+[
+  { "id":"PA1", "name":"PA1 - Chung cư (Quận 6)", "area":"Quận 6", "price":3200000000, "pS":10, "lS":8, "fS":8 },
+  { "id":"PA2", "name":"PA2 - Nhà Phố (Bình Tân)", "area":"Bình Tân", "price":5500000000, "pS":8, "lS":4, "fS":7 },
+  { "id":"PA3", "name":"PA3 - Villa (Thủ Đức)", "area":"Thủ Đức", "price":4500000000, "pS":8, "lS":8, "fS":9 },
+  { "id":"PA4", "name":"PA4 - Chung cư (Quận 12)", "area":"Quận 12", "price":2600000000, "pS":10, "lS":8, "fS":8 },
+  { "id":"PA5", "name":"PA5 - Nhà Phố (Quận 7)", "area":"Quận 7", "price":5200000000, "pS":8, "lS":8, "fS":10 }
+]

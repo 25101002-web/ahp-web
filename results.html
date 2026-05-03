@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AHP Results</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body{ padding:18px; }
+    #result{ list-style:none; padding:0; }
+    #result li{ background:#fff; padding:8px 12px; margin:8px 0; border-radius:8px; box-shadow:0 6px 18px rgba(2,6,23,0.04); }
+  </style>
+</head>
+<body>
+
+<h2>🏆 Kết quả chọn nhà tối ưu</h2>
+<p id="loading">Đang tải dữ liệu...</p>
+<ul id="result" style="display:none;"></ul>
+<div id="status" class="small text-muted">Kết nối Supabase...</div>
+
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script>
+// Use Supabase CDN client directly
+// Replace with your values (do NOT commit service_role key)
+const supabaseUrl = "https://nfjxfqabxbmzgnslkuev.supabase.co";
+const supabaseKey = "YOUR_KEY"; // replace with anon/public key
+
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+const statusEl = document.getElementById('status');
+const loadingEl = document.getElementById('loading');
+const resultList = document.getElementById('result');
+
+async function loadData(){
+  if(loadingEl) loadingEl.style.display = 'block';
+  if(resultList) resultList.style.display = 'none';
+  statusEl.textContent = 'Đang tải dữ liệu...';
+  try{
+    const { data, error } = await supabase.from('ahp_result').select('*');
+    if(error){
+      console.error(error);
+      statusEl.textContent = 'Lỗi khi truy vấn dữ liệu: ' + (error.message || error);
+      if(loadingEl) loadingEl.style.display = 'none';
+      return;
+    }
+
+    // hide loading as requested
+    document.getElementById('loading').style.display = 'none';
+
+    if(!data || data.length === 0){
+      statusEl.textContent = 'Không có dữ liệu.';
+      return;
+    }
+
+    statusEl.textContent = `Tìm thấy ${data.length} bản ghi.`;
+
+    // sort + format + medals
+    data
+      .sort((a, b) => (Number(b.final_score) || 0) - (Number(a.final_score) || 0))
+      .forEach((item, index) => {
+        const li = document.createElement('li');
+        let medal = '';
+        if (index === 0) medal = '🥇 ';
+        else if (index === 1) medal = '🥈 ';
+        else if (index === 2) medal = '🥉 ';
+
+        li.textContent = `${medal}${item.apartment_id || item.id || '—'} - Điểm: ${(Number(item.final_score) || 0).toFixed(2)}`;
+        resultList.appendChild(li);
+      });
+
+    if(resultList) resultList.style.display = 'block';
+
+  }catch(e){
+    console.error(e);
+    statusEl.textContent = 'Lỗi: ' + (e && e.message);
+    if(loadingEl) loadingEl.style.display = 'none';
+  }
+}
+
+loadData();
+</script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+﻿id,ten_quan,quan_diem,loai_bds,loai_hinh,gia_ban,gia_diem,dien_tich,dien_tich_diem,vi_tri,vi_tri_diem,dac_diem,hinh_the,duong,loai_duong,giay_to,phap_ly,tien_ich,diem_tien_ich
+PA1,Quận 6,8,Chung cư,6,3.2,10,70,8,7.5,6,Vuông vức,8,Hẻm xe hơi,7,Sổ hồng riêng,10,Khá,7
+PA2,Bình Tân,5,Nhà Phố,8,5.5,8,48,4,12,4,Nở hậu,10,Hẻm xe hơi,7,Sổ chung,5,Khá,7
+PA3,Thủ Đức,8,Villa,10,4.5,8,95,8,9,6,Vuông vức,8,Mặt tiền,10,Sổ hồng riêng,10,Đầy đủ,10
+PA4,Quận 12,5,Chung cư,6,2.6,10,85,8,12,4,Vuông vức,8,Mặt tiền,10,Sổ chung,5,Đầy đủ,10
+PA5,Quận 7,8,Nhà Phố,8,5.2,8,80,8,5,8,Vuông vức,8,Mặt tiền,10,Sổ hồng riêng,10,Đầy đủ,10
+PA6,Gò Vấp,8,Villa,10,3.1,10,68,6,11,6,Nở hậu,10,Hẻm xe hơi,7,Sổ hồng riêng,10,Khá,7
+PA7,Quận 8,8,Nhà Phố,8,6.8,8,72,8,13,4,Vuông vức,8,Hẻm ba gác,4,Sổ chung,5,Ít,3
+PA8,Tân Bình,8,Villa,10,4,10,78,8,6.5,8,Vuông vức,8,Hẻm xe hơi,7,Sổ hồng riêng,10,Đầy đủ,10
+PA9,Phú Nhuận,10,Chung cư,6,4.8,8,82,8,4,8,Vuông vức,8,Mặt tiền,10,Sổ hồng riêng,10,Đầy đủ,10
+PA10,Quận 11,5,Nhà Phố,8,7.9,6,70,8,6,8,Nở hậu,10,Hẻm xe hơi,7,Sổ hồng riêng,10,Khá,7
+PA11,Quận 5,10,Villa,10,25.5,2,65,6,5.5,8,Vuông vức,8,Hẻm xe hơi,7,Sổ hồng riêng,10,Khá,7
+PA12,Quận 10,10,Nhà Phố,8,12.2,4,74,8,6,8,Vuông vức,8,Mặt tiền,10,Sổ hồng riêng,10,Đầy đủ,10
+PA13,Bình Thạnh,8,Chung cư,6,3.6,10,65,6,20,4,Vuông vức,8,Mặt tiền,10,Sổ chung,5,Đầy đủ,10
+PA14,Quận 3,10,Nhà Phố,8,8.8,6,90,8,2,10,Vuông vức,8,Mặt tiền,10,Sổ hồng riêng,10,Đầy đủ,10
+PA15,Quận 4,8,Villa,10,6.8,8,68,6,7,6,Tóp hậu,3,Hẻm xe hơi,7,Sổ chung,5,Khá,7
+PA16,Tân Phú,8,Chung cư,6,5.8,8,76,8,10,6,"Vuông vức, nhà trống giao ngay",8,Hẻm xe hơi,7,Sổ hồng riêng,10,Khá,7
+PA17,Quận 1,10,Nhà Phố,8,35.9,2,85,8,1,10,Vuông vức,8,Mặt tiền,10,Sổ hồng riêng,10,Đầy đủ,10
+PA18,Quận 7,8,Nhà Phố,8,5.5,8,88,8,5.5,8,Nở hậu,10,Mặt tiền,10,Sổ hồng riêng,10,Đầy đủ,10
+PA19,Bình Tân,5,Chung cư,6,3.9,10,56,6,14,4,Vuông vức,8,Mặt tiền,10,Sổ hồng riêng,10,Ít,3
+PA20,Hóc Môn,5,Chung cư,6,2.3,10,95,8,18,4,Vuông vức,8,Hẻm xe hơi,7,Sổ hồng riêng,10,Ít,3
+PA21,Củ Chi,5,Nhà Phố,8,2.1,10,110,10,20,4,Vuông vức,8,Hẻm xe hơi,7,Sổ hồng riêng,10,Ít,3
+PA22,Nhà Bè,5,Villa,10,12.6,4,85,8,9.5,6,Nở hậu,10,Hẻm xe hơi,7,Sổ hồng riêng,10,Khá,7
+PA23,Thủ Đức,8,Nhà Phố,8,6.8,8,92,8,8,6,Vuông vức,8,Mặt tiền,10,Sổ hồng riêng,10,Đầy đủ,10
+PA24,Quận 12,5,Nhà Phố,8,3.5,10,80,8,16,4,Tóp hậu,3,Hẻm ba gác,4,Sổ hồng riêng,10,Ít,3
+PA25,Gò Vấp,8,Chung cư,6,3.8,10,78,8,9,6,Vuông vức,8,Hẻm xe hơi,7,Sổ hồng riêng,10,Khá,7
+PA26,Quận 6,8,Nhà Phố,8,6.8,8,72,8,8,6,Vuông vức,8,Hẻm xe hơi,7,Sổ hồng riêng,10,Khá,7
+PA27,Bình Tân,5,Nhà Phố,8,6.5,8,48,4,13.5,4,Nở hậu,10,Hẻm ba gác,4,Sổ hồng riêng,10,Khá,7
+PA28,Thủ Đức,8,Chung cư,6,4.7,8,100,8,9.5,6,Vuông vức,8,Mặt tiền,10,Sổ hồng riêng,10,Đầy đủ,10
+PA29,Quận 12,5,Nhà Phố,8,3.8,10,85,8,17,4,Nở hậu,10,Hẻm xe hơi,7,Giấy tay,2,Ít,3
+PA30,Gò Vấp,8,Villa,10,3.9,10,80,8,10,6,Vuông vức,8,Hẻm xe hơi,7,Sổ hồng riêng,10,Khá,7
+PA31,Tân Bình,8,Nhà Phố,8,4.3,8,75,8,6,8,Vuông vức,8,Mặt tiền,10,Sổ hồng riêng,10,Đầy đủ,10
+PA32,Phú Nhuận,10,Chung cư,6,4.9,8,85,8,4.5,8,Nở hậu,10,Mặt tiền,10,Sổ hồng riêng,10,Đầy đủ,10
+PA33,Quận 8,8,Nhà Phố,8,8.5,6,74,8,12.5,4,Vuông vức,8,Hẻm xe hơi,7,Sổ hồng riêng,10,Khá,7
+PA34,Quận 5,10,Chung cư,6,6.6,8,48,4,6,8,Tóp hậu,3,Hẻm xe hơi,7,Sổ chung,5,Khá,7
+PA35,Bình Thạnh,8,Nhà Phố,8,5.1,8,50,6,20,4,Vuông vức,8,Hẻm xe hơi,7,Sổ hồng riêng,10,Đầy đủ,10
+PA36,Quận 7,8,Chung cư,6,5.4,8,92,8,5,8,Nở hậu,10,Mặt tiền,10,Sổ hồng riêng,10,Đầy đủ,10
+PA37,Nhà Bè,5,Nhà Phố,8,3.2,10,50,6,11,6,Vuông vức,8,Hẻm xe hơi,7,Sổ hồng riêng,10,Khá,7
+PA38,Hóc Môn,5,Villa,10,5.5,10,100,8,17.5,4,Vuông vức,8,Hẻm xe hơi,7,Sổ hồng riêng,10,Ít,3
+PA39,Củ Chi,5,Chung cư,6,2.2,10,115,10,20,4,Vuông vức,8,Hẻm xe hơi,7,Sổ hồng riêng,10,Ít,3
+PA40,Quận 10,10,Nhà Phố,8,15.9,4,76,8,6.5,8,Vuông vức,8,Mặt tiền,10,Sổ hồng riêng,10,Đầy đủ,10
+PA41,Quận 11,5,Villa,10,22.8,2,70,8,6,8,Nở hậu,10,Hẻm xe hơi,7,Sổ hồng riêng,10,Khá,7
+PA42,Tân Phú,8,Chung cư,6,6.8,8,95,8,10.5,6,Vuông vức,8,Hẻm xe hơi,7,Sổ hồng riêng,10,Khá,7
+PA43,Quận 4,8,Nhà Phố,8,5.5,8,50,6,7,6,Tóp hậu,3,Hẻm xe hơi,7,Sổ chung,5,Khá,7
+PA44,Quận 3,10,Villa,10,16.6,4,88,8,2.5,10,Vuông vức,8,Mặt tiền,10,Sổ hồng riêng,10,Đầy đủ,10
+PA45,Quận 1,10,Chung cư,6,8.2,6,92,8,2.5,10,Vuông vức,8,Mặt tiền,10,Sổ hồng riêng,10,Đầy đủ,10
+PA46,Bình Tân,5,Villa,10,15.9,4,150,10,14,4,Nở hậu,10,Hẻm xe hơi,7,Sổ hồng riêng,10,Ít,3
+PA47,Thủ Đức,8,Nhà Phố,8,4.4,8,97,8,8.5,6,Vuông vức,8,Mặt tiền,10,Sổ hồng riêng,10,Đầy đủ,10
+PA48,Quận 12,5,Villa,10,10.9,6,250,10,15.5,4,Vuông vức,8,Hẻm xe hơi,7,Sổ hồng riêng,10,Ít,3
+PA49,Gò Vấp,8,Villa,10,3.6,10,79,8,9,6,Nở hậu,10,Hẻm xe hơi,7,Sổ hồng riêng,10,Khá,7
+PA50,Nhà Bè,5,Chung cư,6,3.1,10,40,4,12,4,Vuông vức,8,,7,Sổ hồng riêng,10,Khá,7

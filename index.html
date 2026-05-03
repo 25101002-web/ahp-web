@@ -1,0 +1,1511 @@
+<!DOCTYPE html><html xmlns:th="http://www.thymeleaf.org"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống AHP - Kết Quả</title>
+
+        <!-- SEO: on-page meta tags -->
+        <meta name="description" content="Hệ thống hỗ trợ ra quyết định chọn nhà phố bằng phương pháp AHP — so sánh, xếp hạng và gợi ý nhà phù hợp theo trọng số ưu tiên của khách hàng. Trực quan: biểu đồ, danh sách, bản đồ và chatbot tư vấn.">
+        <meta name="keywords" content="AHP, bất động sản, chọn nhà, nhà phố, tư vấn BĐS, phân tích AHP, xếp hạng nhà, chatbot bất động sản">
+        <meta name="robots" content="index, follow">
+        <link rel="canonical" href="https://your-domain.example/">
+        <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+
+        <!-- Open Graph / Social preview -->
+        <meta property="og:type" content="website">
+        <meta property="og:title" content="Hệ Thống AHP - Tư vấn chọn nhà phố">
+        <meta property="og:description" content="Dùng AHP để xếp hạng và gợi ý nhà phù hợp theo trọng số khách hàng. Hiển thị biểu đồ, danh sách, bản đồ và chatbot tư vấn.">
+        <meta property="og:image" content="images/logo.jpg">
+        <meta property="og:url" content="https://your-domain.example/">
+        <meta name="twitter:card" content="summary_large_image">
+
+        <!-- Structured data (JSON-LD) for Organization & WebSite -->
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@graph": [
+                {
+                    "@type": "Organization",
+                    "name": "SMART HOUSE AHP - Đại Học Tài Nguyên & Môi Trường",
+                    "url": "https://your-domain.example/",
+                    "logo": "https://your-domain.example/images/logo.jpg"
+                },
+                {
+                    "@type": "WebSite",
+                    "url": "https://your-domain.example/",
+                    "name": "Hệ Thống AHP - Tư vấn chọn nhà",
+                    "potentialAction": {
+                        "@type": "SearchAction",
+                        "target": "https://your-domain.example/?q={search_term_string}",
+                        "query-input": "required name=search_term_string"
+                    }
+                }
+            ]
+        }
+        </script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root{
+            --brand-start:#287a08fe;
+            --brand-end:#076605;
+        }
+        body { background:#f3f6f9; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial; }
+        .top-decor { height:6px; background: linear-gradient(90deg,var(--brand-start),var(--brand-end)); }
+        .brand-bar { background: linear-gradient(135deg, rgba(14,165,233,0.06), rgba(3,105,161,0.04)); }
+        .card-custom{ border:none; border-radius:12px; box-shadow:0 6px 20px rgba(2,6,23,0.06); }
+        
+        /* Chỉnh Logo lớn hơn phù hợp yêu cầu */
+        .logo-img { 
+            width: 90px; 
+            height: 90px; 
+            object-fit: contain; 
+            padding: 5px; 
+        }
+
+        nav.navbar-brand-bar{ background: linear-gradient(90deg,var(--brand-start),var(--brand-end)); padding: 0.8rem 0; }
+        nav.navbar-brand-bar .nav-link, nav.navbar-brand-bar .btn{ color:#fff !important; }
+
+        .slider-wrapper{ position:relative; padding-top:22px; }
+        .slider-value{ position:absolute; top:0; transform:translateX(-50%); background:var(--brand-start); color:#fff; padding:4px 7px; border-radius:6px; font-size:0.82rem; white-space:nowrap; }
+
+        #map{ width:100%; height:420px; border-radius:8px; }
+        @media (max-width:768px){ #map{ height:320px; } }
+        
+    .carousel-item img { border-radius: 8px; }
+    .carousel-caption { background: rgba(0,0,0,0.5); border-radius: 10px; padding: 10px; bottom: 20px; z-index:6; }
+    .house-card-item:hover{ background:#eef6ff; }
+    .house-card-item.selected{ background:#dbeffd; border-left:4px solid #0284c7; }
+    /* make the suggestions list scrollable to avoid pushing page content */
+    #houseListScroll{ max-height:320px; overflow-y:auto; padding:8px; }
+    /* subtle scrollbar styling for WebKit */
+    #houseListScroll::-webkit-scrollbar{ width:10px; }
+    #houseListScroll::-webkit-scrollbar-thumb{ background:rgba(0,0,0,0.08); border-radius:8px; }
+        /* sample image fade animation */
+        #sampleHouseImg{ transition: opacity 300ms ease; }
+        #sampleHouseImg.fading{ opacity:0; }
+        .sample-controls{ display:flex; align-items:center; gap:8px; margin-top:8px; }
+        /* reserve space so controls don't overlap following cards */
+        .sample-card{ padding-bottom:88px; position:relative; }
+        .sample-index{ min-width:56px; text-align:center; font-weight:600; }
+        .sample-slider{ flex:1; }
+        .phone-btn svg { display:block; }
+        .score-bar { width:6px; height:48px; border-radius:6px; margin-right:12px; flex-shrink:0; }
+        .house-item-row{ display:flex; align-items:center; }
+        .phone-btn:hover { box-shadow:0 4px 14px rgba(2,132,199,0.12); transform:translateY(-1px); }
+        .phone-btn:active { transform:translateY(0); }
+        /* navbar phone icon */
+        .nav-phone-svg{ width:18px; height:18px; display:inline-block; vertical-align:middle; }
+    /* results summary styles */
+    .stat-card .small{ color:#6b7280; }
+    .locked-panel{ border-left:4px solid rgba(250,180,60,0.08); }
+    @media (max-width:767px){ .stat-card{ min-width:100px !important; } .locked-panel .row{ gap:8px; } }
+    /* highlight glow for selected list item */
+    .house-card-item.highlight-glow{ box-shadow:0 8px 30px rgba(225,29,72,0.12); border-left:4px solid #e11d48; animation: glowPulse 1.6s ease-in-out infinite; background: linear-gradient(90deg, rgba(225,29,72,0.04), rgba(3,132,199,0.02)); }
+    @keyframes glowPulse{ 0%{ box-shadow:0 6px 18px rgba(225,29,72,0.08);}50%{ box-shadow:0 18px 40px rgba(225,29,72,0.16);}100%{ box-shadow:0 6px 18px rgba(225,29,72,0.08);} }
+    /* map selected property info box */
+    .map-info-box{ position:absolute; right:18px; top:18px; z-index:800; background:#fff; padding:12px 14px; border-radius:10px; box-shadow:0 8px 24px rgba(2,6,23,0.12); min-width:220px; display:none; }
+    .map-info-box h6{ margin:0 0 6px 0; font-size:14px; }
+    .map-card-wrapper{ position:relative; }
+    </style></head><body>
+    <div class="top-decor"></div>
+
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-brand-bar">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <img src="images/logo.jpg" alt="Logo DHTNMT" class="logo-img me-3" onerror="this.onerror=null; this.src='images/logo.jpg'">
+                <div class="d-flex flex-column text-white">
+                    <div style="font-size:0.85rem; font-weight:700; letter-spacing:0.6px; text-transform: uppercase;">Bộ Tài Nguyên và Môi Trường</div>
+                    <strong style="font-size:1.1rem; margin-top:2px;">ĐẠI HỌC TÀI NGUYÊN & MÔI TRƯỜNG TP.HCM</strong>
+                    <small style="opacity:0.9; font-weight: 300;">HỆ HỖ TRỢ RA QUYẾT ĐỊNH — SMART HOUSE AHP</small>
+                </div>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="#">Kết quả</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Phân tích</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Gợi ý AI</a></li>
+                    <li class="nav-item ms-3"><a class="btn btn-outline-light btn-sm" href="#">Tải báo cáo</a></li>
+                    <li class="nav-item ms-4">
+                        <a class="nav-link d-flex align-items-center" href="tel:0977704394" style="font-weight:700; color:#ffd54a;">
+                            <svg class="nav-phone-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24c1.12.37 2.33.57 3.57.57a1 1 0 011 1V20a1 1 0 01-1 1C10.07 21 3 13.93 3 4a1 1 0 011-1h2.5a1 1 0 011 1c0 1.24.2 2.45.57 3.57a1 1 0 01-.24 1.01l-2.2 2.21z" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span style="margin-left:8px;">0977-704-394</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="brand-bar py-4">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-1" style="color:#073b4c; font-weight: 800;">Phân Tích Bất Động Sản Nhà Phố</h1>
+                    <p class="text-muted mb-0">Ứng dụng phương pháp AHP để tối ưu hóa lựa chọn cư trú</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <div class="small text-muted">Cập nhật: <span id="currentDate"></span></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Results summary (inserted to match requested UI from screenshot) -->
+    <section class="container my-3">
+        <div class="card card-custom p-3 mb-3">
+            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+                <div>
+                    <h5 class="mb-1" style="letter-spacing:0.6px;">KẾT QUẢ PHÂN TÍCH RA QUYẾT ĐỊNH</h5>
+                    <div class="small text-muted">Tổng quan nhanh về các lựa chọn dựa trên trọng số AHP</div>
+                </div>
+
+                <div class="d-flex gap-3 flex-wrap">
+                    <div class="stat-card bg-white p-3 rounded text-center" style="min-width:120px; box-shadow:0 6px 18px rgba(2,6,23,0.04);">
+                        <div class="small text-muted">🏠 Căn thỏa mãn</div>
+                        <div id="resultsSatisfyCount" class="h4 fw-bold">6</div>
+                    </div>
+
+                    <div class="stat-card bg-white p-3 rounded text-center" style="min-width:160px; box-shadow:0 6px 18px rgba(2,6,23,0.04);">
+                        <div class="small text-muted">🏆 Điểm tối ưu</div>
+                        <div id="resultsBestScore" class="h4 fw-bold">8.4848</div>
+                    </div>
+
+                    <div class="stat-card bg-white p-3 rounded text-center" style="min-width:140px; box-shadow:0 6px 18px rgba(2,6,23,0.04);">
+                        <div class="small text-muted">💰 Giá tốt nhất</div>
+                        <div id="resultsBestPrice" class="h4 fw-bold">4.9 tỷ</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="locked-panel mt-3 p-3 rounded" style="background: linear-gradient(180deg, rgba(255,250,240,0.9), rgba(255,255,255,0.92)); border:1px solid rgba(0,0,0,0.04);">
+                <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
+                    <div class="flex-fill">
+                        <div class="small text-muted">Vui lòng để lại thông tin để mở khóa báo cáo chi tiết.</div>
+                        <div class="row g-2 mt-2">
+                            <div class="col-12 col-sm-4"><input id="reportName" class="form-control form-control-sm" placeholder="Họ và tên *"></div>
+                            <div class="col-12 col-sm-4"><input id="reportPhone" class="form-control form-control-sm" placeholder="Số điện thoại *"></div>
+                            <div class="col-12 col-sm-4"><input id="reportEmail" class="form-control form-control-sm" placeholder="Email (nếu có)"></div>
+                        </div>
+                    </div>
+                    <div class="text-md-end">
+                        <button id="getReportBtn" class="btn btn-primary btn-lg" style="min-width:160px;">🚀 NHẬN BÁO CÁO</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="container my-4">
+        <div class="row gx-4 gy-3">
+            <!-- LEFT COLUMN: House sample, sliders, customer info, chatbot -->
+            <div class="col-lg-4">
+                <div class="card card-custom p-3 mb-3">
+            <div class="position-relative sample-card">
+                <img id="sampleHouseImg" 
+     src="images/Nha1.jpg" 
+     class="img-fluid house-card-img" 
+     alt="Mô tả căn nhà số 1">            
+                
+                            /*<div class="carousel-caption" style="left:0; right:0; bottom:72px; margin:0 auto; width:fit-content; background: rgba(0,0,0,0.55); padding:10px 20px; border-radius:8px; z-index:6;">Xem nhà mẫu</div>*/
+                            <button id="samplePrev" class="btn btn-dark" style="position:absolute; left:8px; top:50%; transform:translateY(-50%); opacity:0.95;">◀</button>
+                            <button id="sampleNext" class="btn btn-dark" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); opacity:0.95;">▶</button>
+                <div style="position:absolute; left:0; right:0; bottom:12px; padding:0 12px;">
+                                <div class="sample-controls">
+                                    <button id="samplePrevSmall" class="btn btn-sm btn-outline-dark">◀</button>
+                                    <div class="sample-slider">
+                                        <input id="sampleSlider" type="range" min="0" max="0" value="0" class="form-range" step="1">
+                                    </div>
+                                    <button id="sampleNextSmall" class="btn btn-sm btn-outline-dark">▶</button>
+                                    <div class="sample-index text-muted small" id="sampleIndexDisplay">1 / 1</div>
+                                </div>
+                                <!-- caption area for the currently shown sample -->
+                                <div class="d-flex justify-content-between align-items-center mt-2" style="background:rgba(255,255,255,0.9); padding:8px 10px; border-radius:8px; box-shadow:0 6px 18px rgba(2,6,23,0.04);">
+                                    <div>
+                                        <div id="sampleCaptionTitle" class="fw-bold">PA1 - Chung cư (Quận 6)</div>
+                                        <div id="sampleCaptionSub" class="small text-muted">Vị trí: Quận 6 | Giá: 3.2 Tỷ</div>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button id="sampleDetailBtn" class="btn btn-sm btn-outline-primary">Chi tiết</button>
+                                        <button id="sampleViewBtn" class="btn btn-sm btn-primary">Chọn</button>
+                                    </div>
+                                </div>
+                                                    <!-- sample controls (arrows/slider) -->
+                            </div>
+                        </div>
+                </div>
+
+                <!-- Detailed area selection & budget / area sliders (from user attachment) -->
+                <div class="card card-custom p-3 mb-3">
+                    <details open>
+                        <summary class="fw-bold">📍 Chọn khu vực chi tiết</summary>
+                        <div class="mt-3">
+                            <div class="small text-muted">Trung tâm TP:</div>
+                            <div id="areaChips" class="d-flex gap-2 flex-wrap mt-2"></div>
+                            <div class="mt-2 d-flex gap-2 align-items-center">
+                                <input id="areaAddInput" class="form-control form-control-sm" list="areaList" placeholder="Thêm khu vực...">
+                                <datalist id="areaList"></datalist>
+                                <button id="areaAddBtn" class="btn btn-sm btn-outline-primary">Thêm</button>
+                            </div>
+                            <div id="areaSelectedNotice" class="mt-3 p-2 rounded" style="background:#ecfdf5; display:flex; align-items:center; gap:8px;">
+                                <div style="width:22px; height:22px; background:#16a34a; color:#fff; border-radius:4px; display:flex; align-items:center; justify-content:center; font-weight:700;">✔</div>
+                                <div class="small text-muted">Đã chọn <span id="selectedAreaCount">3</span> khu vực</div>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="card card-custom p-3 mb-3">
+                    <h6 class="fw-bold mb-2">Ngân sách tối đa (Tỷ đồng):</h6>
+                    <div class="d-flex align-items-center gap-3">
+                        <input id="budgetSlider" type="range" min="0" max="100" step="0.1" value="35.9" class="form-range">
+                        <div id="budgetDisplay" class="fw-bold">35.90</div>
+                    </div>
+                    <hr/>
+                    <h6 class="fw-bold mb-2">Diện tích mong muốn (m2):</h6>
+                    <div class="d-flex gap-2 align-items-center">
+                        <input id="areaMin" type="range" min="10" max="500" step="1" value="40" class="form-range" style="flex:1">
+                        <input id="areaMax" type="range" min="10" max="500" step="1" value="250" class="form-range" style="flex:1">
+                    </div>
+                    <div class="small text-muted mt-2"><span id="areaDisplay">40.00 - 250.00</span></div>
+                </div>
+
+                <div class="card card-custom p-3 mb-3">
+                    <h6 class="fw-bold mb-3">Trọng số ưu tiên (AHP)</h6>
+                    <div class="mb-3">
+                        <label class="form-label">Giá <span id="w-price" class="fw-bold text-primary">30%</span></label>
+                        <div class="slider-wrapper">
+                            <span class="slider-value" id="val-price">30%</span>
+                            <input id="slider-price" class="form-range criteria-slider" data-key="price" type="range" min="0" max="100" value="30">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Vị trí (Mặt tiền) <span id="w-l" class="fw-bold text-primary">40%</span></label>
+                        <div class="slider-wrapper">
+                            <span class="slider-value" id="val-l">40%</span>
+                            <input id="slider-l" class="form-range criteria-slider" data-key="l" type="range" min="0" max="100" value="40">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tiện ích & Pháp lý <span id="w-f" class="fw-bold text-primary">30%</span></label>
+                        <div class="slider-wrapper">
+                            <span class="slider-value" id="val-f">30%</span>
+                            <input id="slider-f" class="form-range criteria-slider" data-key="f" type="range" min="0" max="100" value="30">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-custom p-3 mb-3">
+                    <h6 class="fw-bold mb-2">Thông tin khách hàng</h6>
+                    <input id="custName" class="form-control form-control-sm mb-2" placeholder="Tên khách hàng">
+                    <input id="custPhone" class="form-control form-control-sm mb-2" placeholder="SĐT khách">
+                    <div class="d-grid gap-2">
+                        <button id="custSaveBtn" class="btn btn-success btn-sm">Lưu thông tin</button>
+                    </div>
+                </div>
+
+                <div class="card card-custom p-3 mb-3">
+                    <h6 class="fw-bold mb-2">Luật chuyên gia ưu tiên</h6>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input expert-rule" type="checkbox" value="appearance" id="crit_appearance">
+                        <label class="form-check-label d-flex align-items-center" for="crit_appearance">Ưu tiên nhà hình thể đẹp (>= 8đ)
+                            <small class="ms-2 text-muted" title="Nhà có điểm hình thể (pS) >= 8 sẽ được cộng điểm ưu tiên">ℹ️</small>
+                        </label>
+                        <div class="mt-1">
+                            <input type="number" step="0.1" min="0" max="3" class="form-control form-control-sm expert-bonus" data-rule="appearance" value="0.6" title="Số điểm cộng nếu thỏa">
+                        </div>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input expert-rule" type="checkbox" value="legalOnly" id="crit_legal">
+                        <label class="form-check-label d-flex align-items-center" for="crit_legal">Chỉ chọn nhà có Pháp lý an toàn (10đ)
+                            <small class="ms-2 text-muted" title="Lọc ra các phương án có điểm pháp lý (fS) cao; phía hệ thống dùng ngưỡng fS >= 8">ℹ️</small>
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input expert-rule" type="checkbox" value="wideRoad" id="crit_road">
+                        <label class="form-check-label d-flex align-items-center" for="crit_road">Ưu tiên đường rộng (>= 7đ)
+                            <small class="ms-2 text-muted" title="Ưu tiên các nhà có điểm vị trí (lS) >= 7">ℹ️</small>
+                        </label>
+                        <div class="mt-1">
+                            <input type="number" step="0.1" min="0" max="3" class="form-control form-control-sm expert-bonus" data-rule="wideRoad" value="0.5" title="Số điểm cộng nếu thỏa">
+                        </div>
+                    </div>
+
+                    <details class="mt-2 p-2" style="background:#fafafa; border-radius:6px;">
+                        <summary style="cursor:pointer;">🛠️ Các luật bổ sung</summary>
+                        <div class="mt-2">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input expert-rule" type="checkbox" value="nearAmenity" id="crit_amenity">
+                                <label class="form-check-label d-flex align-items-center" for="crit_amenity">Gần tiện ích công cộng (>= 8đ)
+                                    <small class="ms-2 text-muted" title="Ưu tiên các nhà có điểm tiện ích/pháp lý (fS) >= 8">ℹ️</small>
+                                </label>
+                                <div class="mt-1">
+                                    <input type="number" step="0.1" min="0" max="3" class="form-control form-control-sm expert-bonus" data-rule="nearAmenity" value="0.4" title="Số điểm cộng nếu thỏa">
+                                </div>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input expert-rule" type="checkbox" value="noPlanning" id="crit_no_planning">
+                                <label class="form-check-label d-flex align-items-center" for="crit_no_planning">Không vướng quy hoạch (10đ)
+                                    <small class="ms-2 text-muted" title="Chọn các nhà có nguy cơ quy hoạch thấp (heuristic: fS cao)">ℹ️</small>
+                                </label>
+                                <div class="mt-1">
+                                    <input type="number" step="0.1" min="0" max="3" class="form-control form-control-sm expert-bonus" data-rule="noPlanning" value="0.6" title="Số điểm cộng nếu thỏa">
+                                </div>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input expert-rule" type="checkbox" value="onlyHouse" id="crit_only_house">
+                                <label class="form-check-label d-flex align-items-center" for="crit_only_house">Chỉ chọn Nhà phố/Biệt thự
+                                    <small class="ms-2 text-muted" title="Lọc chỉ giữ lại các bản ghi tên có 'Nhà Phố' hoặc 'Villa' hoặc 'Biệt thự'">ℹ️</small>
+                                </label>
+                            </div>
+                        </div>
+                    </details>
+                    <div class="d-flex gap-2 mt-2">
+                        <button id="saveRulesBtn" class="btn btn-sm btn-outline-primary">Lưu cấu hình</button>
+                        <button id="resetRulesBtn" class="btn btn-sm btn-outline-secondary">Khôi phục mặc định</button>
+                        <div class="small text-muted mt-1">Lưu ý: Các luật dạng "Chỉ chọn" sẽ lọc ra các phương án không thỏa; các luật khác sẽ cộng điểm ưu tiên.</div>
+                    </div>
+                </div>
+
+                <!-- Tiêu chí phong thủy -->
+                <div class="card card-custom p-3 mb-3">
+                    <h6 class="fw-bold">🕰️ Tiêu chí phong thủy</h6>
+                    <div class="mt-2">
+                        <label class="form-label small">Chọn hướng nhà mong muốn:</label>
+                        <select id="fengshuiSelect" class="form-select form-select-sm visually-hidden" aria-hidden="true">
+                            <option value="all">Tất cả</option>
+                            <option value="Bắc">Bắc</option>
+                            <option value="Nam">Nam</option>
+                            <option value="Đông">Đông</option>
+                            <option value="Tây">Tây</option>
+                            <option value="Đông Bắc">Đông Bắc</option>
+                            <option value="Tây Bắc">Tây Bắc</option>
+                            <option value="Đông Nam">Đông Nam</option>
+                            <option value="Tây Nam">Tây Nam</option>
+                        </select>
+                        <!-- Custom dropdown UI -->
+                        <div id="fengDropdownWrap" class="feng-dropdown mt-2" style="position:relative;">
+                            <div class="d-flex" style="width:100%;">
+                                <button id="fengToggleBtn" type="button" class="btn btn-light d-flex align-items-center" style="flex:1; justify-content:flex-start;">
+                                    <span id="fengToggleLabel">Tất cả</span>
+                                </button>
+                                <button id="fengCaretBtn" type="button" class="btn btn-light" style="width:44px; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                                    <span id="fengCaret">▾</span>
+                                </button>
+                            </div>
+                            <div id="fengPanel" class="card" style="position:absolute; left:0; right:0; top:46px; z-index:1200; display:none; box-shadow:0 10px 30px rgba(2,6,23,0.08);">
+                                <div class="card-body p-2">
+                                    <div class="list-group list-group-flush">
+                                        <label class="list-group-item d-flex align-items-start gap-2" data-val="all" style="cursor:pointer;">
+                                            <div style="min-width:36px; text-align:center; font-size:18px;">🌐</div>
+                                            <div>
+                                                <div class="fw-bold">Tất cả</div>
+                                                <div class="small text-muted">Hiển thị mọi hướng</div>
+                                            </div>
+                                        </label>
+                                        <label class="list-group-item d-flex align-items-start gap-2" data-val="Bắc" style="cursor:pointer;">
+                                            <div style="min-width:36px; text-align:center; font-size:18px;">⬆️</div>
+                                            <div>
+                                                <div class="fw-bold">Bắc</div>
+                                                <div class="small text-muted">Hướng Bắc — hợp Thủy/Thuộc mát mẻ</div>
+                                            </div>
+                                        </label>
+                                        <label class="list-group-item d-flex align-items-start gap-2" data-val="Nam" style="cursor:pointer;">
+                                            <div style="min-width:36px; text-align:center; font-size:18px;">⬇️</div>
+                                            <div>
+                                                <div class="fw-bold">Nam</div>
+                                                <div class="small text-muted">Hướng Nam — sáng, nhiều nắng</div>
+                                            </div>
+                                        </label>
+                                        <label class="list-group-item d-flex align-items-start gap-2" data-val="Đông" style="cursor:pointer;">
+                                            <div style="min-width:36px; text-align:center; font-size:18px;">➡️</div>
+                                            <div>
+                                                <div class="fw-bold">Đông</div>
+                                                <div class="small text-muted">Hướng Đông — đón nắng buổi sáng</div>
+                                            </div>
+                                        </label>
+                                        <label class="list-group-item d-flex align-items-start gap-2" data-val="Tây" style="cursor:pointer;">
+                                            <div style="min-width:36px; text-align:center; font-size:18px;">⬅️</div>
+                                            <div>
+                                                <div class="fw-bold">Tây</div>
+                                                <div class="small text-muted">Hướng Tây — nắng chiều, ấm</div>
+                                            </div>
+                                        </label>
+                                        <label class="list-group-item d-flex align-items-start gap-2" data-val="Đông Bắc" style="cursor:pointer;">
+                                            <div style="min-width:36px; text-align:center; font-size:18px;">↗️</div>
+                                            <div>
+                                                <div class="fw-bold">Đông Bắc</div>
+                                                <div class="small text-muted">Hướng Đông Bắc — hài hòa</div>
+                                            </div>
+                                        </label>
+                                        <label class="list-group-item d-flex align-items-start gap-2" data-val="Tây Bắc" style="cursor:pointer;">
+                                            <div style="min-width:36px; text-align:center; font-size:18px;">↖️</div>
+                                            <div>
+                                                <div class="fw-bold">Tây Bắc</div>
+                                                <div class="small text-muted">Hướng Tây Bắc — phù hợp phong thủy</div>
+                                            </div>
+                                        </label>
+                                        <label class="list-group-item d-flex align-items-start gap-2" data-val="Đông Nam" style="cursor:pointer;">
+                                            <div style="min-width:36px; text-align:center; font-size:18px;">↘️</div>
+                                            <div>
+                                                <div class="fw-bold">Đông Nam</div>
+                                                <div class="small text-muted">Hướng Đông Nam — mát, đón gió</div>
+                                            </div>
+                                        </label>
+                                        <label class="list-group-item d-flex align-items-start gap-2" data-val="Tây Nam" style="cursor:pointer;">
+                                            <div style="min-width:36px; text-align:center; font-size:18px;">↙️</div>
+                                            <div>
+                                                <div class="fw-bold">Tây Nam</div>
+                                                <div class="small text-muted">Hướng Tây Nam — ấm áp</div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="d-flex justify-content-end gap-2 mt-2">
+                                        <button id="fengClearBtn" class="btn btn-sm btn-outline-secondary">Xóa</button>
+                                        <button id="fengApplyBtn" class="btn btn-sm btn-primary">Áp dụng</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="small text-muted mt-2">Lưu ý: Thuật toán sẽ chỉ lọc theo hướng nếu dữ liệu bất động sản chứa trường <code>orientation</code> hoặc <code>direction</code>.</div>
+                    </div>
+                </div>
+
+                <div class="card card-custom p-3 mb-3">
+                    <h6 class="fw-bold mb-2">Tư vấn Khách hàng</h6>
+                    <div id="chatDisplay" class="chat-area mb-2"></div>
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="chatInput" class="form-control" placeholder="Tôi có thể giúp gì cho bạn?">
+                        <button class="btn btn-primary" id="chatSendBtn">Gửi</button>
+                    </div>
+                    <div class="mt-2 d-grid">
+                        <button class="btn btn-outline-secondary btn-sm" id="exportChatBtn">Xuất lịch sử chat (Excel)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: chart top right, list above map bottom right -->
+            <div class="col-lg-8">
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <div class="card card-custom p-3">
+                            <h6 class="fw-bold">Biểu đồ xếp hạng AHP</h6>
+                            <div style="height:300px;"><canvas id="ahpBarChart"></canvas></div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12 mb-3">
+                        <div class="card card-custom p-3">
+                            <h6 class="fw-bold">Danh sách nhà gợi ý</h6>
+                            <div id="houseListScroll" class="scroll-list-wrapper p-0"></div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="card card-custom p-3">
+                            <h6 class="fw-bold">Bản đồ</h6>
+                                <div class="map-card-wrapper">
+                                    <div id="map" style="height:360px;"></div>
+                                    <div id="mapInfoBox" class="map-info-box" aria-hidden="true">
+                                        <h6 id="mapInfoTitle">...</h6>
+                                        <div id="mapInfoAddr" class="small text-muted">Địa chỉ: -</div>
+                                        <div id="mapInfoPrice" class="fw-bold mt-2">Giá: -</div>
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script>
+        // sample data - expanded from CSV/SQL sources
+        const dataList = [
+            { id:'PA1', name:'PA1 - Chung cư (Quận 6)', area:'Quận 6', price:3.2e9, pS:10, lS:8, fS:8 },
+            { id:'PA2', name:'PA2 - Nhà Phố (Bình Tân)', area:'Bình Tân', price:5.5e9, pS:8, lS:4, fS:7 },
+            { id:'PA3', name:'PA3 - Villa (Thủ Đức)', area:'Thủ Đức', price:4.5e9, pS:8, lS:8, fS:9 },
+            { id:'PA4', name:'PA4 - Chung cư (Quận 12)', area:'Quận 12', price:2.6e9, pS:10, lS:8, fS:8 },
+            { id:'PA5', name:'PA5 - Nhà Phố (Quận 7)', area:'Quận 7', price:5.2e9, pS:8, lS:8, fS:10 },
+            { id:'PA6', name:'PA6 - Villa (Gò Vấp)', area:'Gò Vấp', price:3.1e9, pS:10, lS:6, fS:8 },
+            { id:'PA7', name:'PA7 - Nhà Phố (Quận 8)', area:'Quận 8', price:6.8e9, pS:8, lS:8, fS:3 },
+            { id:'PA8', name:'PA8 - Villa (Tân Bình)', area:'Tân Bình', price:4.0e9, pS:10, lS:8, fS:10 },
+            { id:'PA9', name:'PA9 - Chung cư (Phú Nhuận)', area:'Phú Nhuận', price:4.8e9, pS:8, lS:8, fS:10 },
+            { id:'PA10', name:'PA10 - Nhà Phố (Quận 11)', area:'Quận 11', price:7.9e9, pS:6, lS:8, fS:10 },
+            { id:'PA11', name:'PA11 - Villa (Quận 5)', area:'Quận 5', price:25.5e9, pS:2, lS:6, fS:8 },
+            { id:'PA12', name:'PA12 - Nhà Phố (Quận 10)', area:'Quận 10', price:12.2e9, pS:4, lS:8, fS:10 },
+            { id:'PA13', name:'PA13 - Chung cư (Bình Thạnh)', area:'Bình Thạnh', price:3.6e9, pS:10, lS:6, fS:8 },
+            { id:'PA14', name:'PA14 - Nhà Phố (Quận 3)', area:'Quận 3', price:8.8e9, pS:6, lS:8, fS:10 },
+            { id:'PA15', name:'PA15 - Villa (Quận 4)', area:'Quận 4', price:6.8e9, pS:8, lS:6, fS:6 },
+            { id:'PA16', name:'PA16 - Chung cư (Tân Phú)', area:'Tân Phú', price:5.8e9, pS:8, lS:8, fS:10 },
+            { id:'PA17', name:'PA17 - Nhà Phố (Quận 1)', area:'Quận 1', price:35.9e9, pS:2, lS:8, fS:10 },
+            { id:'PA18', name:'PA18 - Nhà Phố (Quận 7)', area:'Quận 7', price:5.5e9, pS:8, lS:8, fS:10 },
+            { id:'PA19', name:'PA19 - Chung cư (Bình Tân)', area:'Bình Tân', price:3.9e9, pS:10, lS:6, fS:3 },
+            { id:'PA20', name:'PA20 - Chung cư (Hóc Môn)', area:'Hóc Môn', price:2.3e9, pS:10, lS:8, fS:3 },
+            { id:'PA21', name:'PA21 - Nhà Phố (Củ Chi)', area:'Củ Chi', price:2.1e9, pS:10, lS:10, fS:3 },
+            { id:'PA22', name:'PA22 - Villa (Nhà Bè)', area:'Nhà Bè', price:12.6e9, pS:4, lS:8, fS:7 },
+            { id:'PA23', name:'PA23 - Nhà Phố (Thủ Đức)', area:'Thủ Đức', price:6.8e9, pS:8, lS:8, fS:10 },
+            { id:'PA24', name:'PA24 - Nhà Phố (Quận 12)', area:'Quận 12', price:3.5e9, pS:10, lS:8, fS:3 },
+            { id:'PA25', name:'PA25 - Chung cư (Gò Vấp)', area:'Gò Vấp', price:3.8e9, pS:10, lS:8, fS:7 },
+            { id:'PA26', name:'PA26 - Nhà Phố (Quận 6)', area:'Quận 6', price:6.8e9, pS:8, lS:8, fS:7 },
+            { id:'PA27', name:'PA27 - Nhà Phố (Bình Tân)', area:'Bình Tân', price:6.5e9, pS:8, lS:4, fS:10 },
+            { id:'PA28', name:'PA28 - Chung cư (Thủ Đức)', area:'Thủ Đức', price:4.7e9, pS:8, lS:8, fS:10 },
+            { id:'PA29', name:'PA29 - Nhà Phố (Quận 12)', area:'Quận 12', price:3.8e9, pS:10, lS:8, fS:2 },
+            { id:'PA30', name:'PA30 - Villa (Gò Vấp)', area:'Gò Vấp', price:3.9e9, pS:10, lS:8, fS:7 },
+            { id:'PA31', name:'PA31 - Nhà Phố (Tân Bình)', area:'Tân Bình', price:4.3e9, pS:8, lS:8, fS:10 },
+            { id:'PA32', name:'PA32 - Chung cư (Phú Nhuận)', area:'Phú Nhuận', price:4.9e9, pS:8, lS:8, fS:10 },
+            { id:'PA33', name:'PA33 - Nhà Phố (Quận 8)', area:'Quận 8', price:8.5e9, pS:6, lS:8, fS:7 },
+            { id:'PA34', name:'PA34 - Chung cư (Quận 5)', area:'Quận 5', price:6.6e9, pS:8, lS:4, fS:7 },
+            { id:'PA35', name:'PA35 - Nhà Phố (Bình Thạnh)', area:'Bình Thạnh', price:5.1e9, pS:8, lS:6, fS:10 },
+            { id:'PA36', name:'PA36 - Chung cư (Quận 7)', area:'Quận 7', price:5.4e9, pS:8, lS:8, fS:10 },
+            { id:'PA37', name:'PA37 - Nhà Phố (Nhà Bè)', area:'Nhà Bè', price:3.2e9, pS:10, lS:6, fS:7 },
+            { id:'PA38', name:'PA38 - Villa (Hóc Môn)', area:'Hóc Môn', price:2.5e9, pS:10, lS:8, fS:3 },
+            { id:'PA39', name:'PA39 - Chung cư (Củ Chi)', area:'Củ Chi', price:2.2e9, pS:10, lS:10, fS:3 },
+            { id:'PA40', name:'PA40 - Nhà Phố (Quận 10)', area:'Quận 10', price:15.9e9, pS:4, lS:8, fS:10 },
+            { id:'PA41', name:'PA41 - Villa (Quận 11)', area:'Quận 11', price:22.8e9, pS:2, lS:8, fS:7 },
+            { id:'PA42', name:'PA42 - Chung cư (Tân Phú)', area:'Tân Phú', price:6.8e9, pS:8, lS:8, fS:7 },
+            { id:'PA43', name:'PA43 - Nhà Phố (Quận 4)', area:'Quận 4', price:5.5e9, pS:8, lS:6, fS:7 },
+            { id:'PA44', name:'PA44 - Villa (Quận 3)', area:'Quận 3', price:16.6e9, pS:4, lS:8, fS:10 },
+            { id:'PA45', name:'PA45 - Chung cư (Quận 1)', area:'Quận 1', price:8.2e9, pS:6, lS:8, fS:10 },
+            { id:'PA46', name:'PA46 - Villa (Bình Tân)', area:'Bình Tân', price:15.9e9, pS:4, lS:10, fS:3 },
+            { id:'PA47', name:'PA47 - Nhà Phố (Thủ Đức)', area:'Thủ Đức', price:4.4e9, pS:8, lS:8, fS:10 },
+            { id:'PA48', name:'PA48 - Villa (Quận 12)', area:'Quận 12', price:10.9e9, pS:6, lS:10, fS:3 },
+            { id:'PA49', name:'PA49 - Villa (Gò Vấp)', area:'Gò Vấp', price:3.6e9, pS:10, lS:9, fS:7 },
+            { id:'PA50', name:'PA50 - Chung cư (Nhà Bè)', area:'Nhà Bè', price:3.1e9, pS:10, lS:4, fS:7 }
+        ];
+
+        // approximate coordinates for main districts - used to place markers when lat/lng not provided
+        const areaCoords = {
+            'Quận 1':[10.7769,106.70098], 'Quận 3':[10.7730,106.6890], 'Quận 4':[10.7525,106.7039],
+            'Quận 5':[10.7545,106.6670], 'Quận 6':[10.7670,106.6740], 'Quận 7':[10.7320,106.7130],
+            'Quận 8':[10.7170,106.6670], 'Quận 10':[10.7710,106.6650], 'Quận 11':[10.7570,106.6450],
+            'Quận 12':[10.8680,106.6610], 'Bình Thạnh':[10.8065,106.7040], 'Gò Vấp':[10.8520,106.6740],
+            'Tân Bình':[10.7920,106.6450], 'Phú Nhuận':[10.8030,106.6880], 'Thủ Đức':[10.8500,106.7700],
+            'Tân Phú':[10.7890,106.6140], 'Hóc Môn':[10.8780,106.6070], 'Củ Chi':[10.9720,106.5580],
+            'Nhà Bè':[10.7000,106.7030], 'Bình Tân':[10.7470,106.6160]
+        };
+
+        // helper to get coords (with small jitter to avoid overlapping markers)
+        function getCoordsForArea(area){
+            const a = area || '';
+            const key = Object.keys(areaCoords).find(k=> normalizeText(a).includes(normalizeText(k)) ) || a;
+            const base = areaCoords[key] || [10.78,106.72];
+            const jitter = (Math.random()-0.5) * 0.02; // ~±0.01 deg
+            return [base[0]+jitter, base[1]+jitter];
+        }
+
+    // fill lat/lng where missing
+        dataList.forEach(d=>{
+            if(!d.lat || !d.lng){
+                const [lat,lng] = getCoordsForArea(d.area);
+                d.lat = lat; d.lng = lng;
+            }
+            // ensure numeric values
+            d.price = Number(d.price) || 0;
+            d.pS = Number(d.pS) || 0;
+            d.lS = Number(d.lS) || 0;
+            d.fS = Number(d.fS) || 0;
+        });
+        let sampleIndex = 0;
+        let selectedId = null;
+
+        // how many sample images are actually present in the images/ folder
+        const AVAILABLE_IMAGE_COUNT = 6; // keep in sync with images/Nha1..Nha6
+
+        // helper to get the current sample order: prefer appearance score (pS desc) so arrows show "nhà đẹp"
+        function getSampleOrder(){
+            try{
+                return dataList.slice().sort((a,b)=> (b.pS||0) - (a.pS||0)).map(d=>d.id);
+            }catch(e){ return dataList.map(d=>d.id); }
+        }
+
+        // App state
+    let ahpChart, map, markersById = {}, chatLog = [];
+
+        function initApp(){
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('vi-VN');
+            initChart();
+            renderList();
+            initMap();
+            wireUI();
+            loadSampleCarousel();
+            // wire fengshui dropdown early so it's available
+            try{ if(typeof initFengDropdown === 'function') initFengDropdown(); }catch(e){}
+            // init results summary
+            loadRuleConfig();
+            updateResultsSummary();
+        }
+
+        function initChart(){
+            const ctx = document.getElementById('ahpBarChart').getContext('2d');
+            ahpChart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: [], datasets: [{ label: 'Điểm AHP', data: [], backgroundColor: '#0284c7' }] },
+                options: { indexAxis: 'y', responsive:true, maintainAspectRatio:false, scales:{ x:{ beginAtZero:true, max:10 } } }
+            });
+            updateScores();
+        }
+
+        function updateScores(){
+            // Read slider weights and normalize so they sum to 1
+            let wp = +document.getElementById('slider-price').value;
+            let wl = +document.getElementById('slider-l').value;
+            let wf = +document.getElementById('slider-f').value;
+            let wsum = wp + wl + wf;
+            if(wsum <= 0) { wp = 0.33; wl = 0.34; wf = 0.33; wsum = 1; }
+            wp = wp / wsum; wl = wl / wsum; wf = wf / wsum;
+
+            // For each criterion compute normalization across alternatives (benefit-type assumed)
+            const maxP = Math.max(...dataList.map(d=>d.pS || 0));
+            const maxL = Math.max(...dataList.map(d=>d.lS || 0));
+            const maxF = Math.max(...dataList.map(d=>d.fS || 0));
+
+            // gather expert rules
+            const rules = {};
+            document.querySelectorAll('.expert-rule').forEach(ch => { if(ch.checked) rules[ch.value]=true; });
+            // gather bonus values from inputs (fallback to defaults)
+            const bonusVals = {};
+            document.querySelectorAll('.expert-bonus').forEach(inp => { bonusVals[inp.dataset.rule] = parseFloat(inp.value) || 0; });
+
+            // apply initial filtering if any 'only' rule exists
+            let filteredList = [...dataList];
+            if(rules.legalOnly){ filteredList = filteredList.filter(d=> d.fS >= 8 ); }
+            if(rules.onlyHouse){ filteredList = filteredList.filter(d=> /nhà phố|nhà phố|villa|biệt thự/i.test(d.name) ); }
+            // apply user-selected area filter (if any)
+            try{
+                const selAreas = JSON.parse(localStorage.getItem('ahp_selected_areas_v1') || '[]');
+                if(Array.isArray(selAreas) && selAreas.length>0){ filteredList = filteredList.filter(d=> selAreas.includes(d.area)); }
+            }catch(e){}
+            // apply budget and area size filters (assumes dataset may include a 'size' field if available)
+            try{
+                const budgetVal = parseFloat(document.getElementById('budgetSlider')?.value || '0');
+                const minArea = parseFloat(document.getElementById('areaMin')?.value || '0');
+                const maxArea = parseFloat(document.getElementById('areaMax')?.value || '9999');
+                if(!isNaN(budgetVal) && budgetVal>0){ // budget in Tỷ -> dataList.price is in VND
+                    const maxPrice = budgetVal * 1000000000;
+                    filteredList = filteredList.filter(d=> (typeof d.price === 'number') ? (d.price <= maxPrice) : true );
+                }
+                if(!isNaN(minArea) || !isNaN(maxArea)){
+                    // only filter by size if data has 'size' numeric field
+                    filteredList = filteredList.filter(d=> {
+                        if(d.size===undefined) return true; // keep if no size data
+                        const s = Number(d.size) || 0; return s >= minArea && s <= maxArea;
+                    });
+                }
+            }catch(e){ console.warn('filtering by budget/area failed', e); }
+
+            // apply fengshui/orientation filter if user selected a specific direction
+            try{
+                const feng = (document.getElementById('fengshuiSelect') && document.getElementById('fengshuiSelect').value) || 'all';
+                if(feng && feng !== 'all'){
+                    filteredList = filteredList.filter(d=> {
+                        const dir = (d.orientation || d.direction || '').toString();
+                        if(!dir) return true; // keep if property has no orientation data
+                        return normalizeText(dir).includes(normalizeText(feng));
+                    });
+                }
+            }catch(e){ console.warn('fengshui filter err', e); }
+
+            const results = filteredList.map(d=>{
+                const np = maxP? (d.pS / maxP) : 0; // normalized [0,1]
+                const nl = maxL? (d.lS / maxL) : 0;
+                const nf = maxF? (d.fS / maxF) : 0;
+                // weighted sum -> scale to 0-10 for display
+                const score01 = (np * wp) + (nl * wl) + (nf * wf);
+                let score10 = +(Math.round(score01 * 10 * 100) / 100); // base score
+                // apply bonus points for expert rules: add up to +1.5 points total
+                let bonus = 0;
+                if(rules.appearance && (d.pS >= 8)) bonus += (bonusVals.appearance || 0.6);
+                if(rules.wideRoad && (d.lS >= 7)) bonus += (bonusVals.wideRoad || 0.5);
+                if(rules.nearAmenity && (d.fS >= 8)) bonus += (bonusVals.nearAmenity || 0.4);
+                if(rules.noPlanning && (d.fS >= 9)) bonus += (bonusVals.noPlanning || 0.6);
+                // clamp bonus so score max 10
+                score10 = Math.min(10, +(score10 + bonus).toFixed(2));
+                return { ...d, score: score10 };
+            }).sort((a,b)=>b.score-a.score);
+
+            // expose last results for external use (e.g., chatbot triggers)
+            window.lastResults = results;
+            ahpChart.data.labels = results.map(r=>r.name);
+            ahpChart.data.datasets[0].data = results.map(r=>r.score);
+            // color bars: highlight the current top result (by id) in red so it moves when ranking changes
+            const topId = (results && results.length>0) ? results[0].id : null;
+            const colors = results.map(r => (r.id === topId) ? '#e11d48' : '#0284c7');
+            ahpChart.data.datasets[0].backgroundColor = colors;
+            // small animation for smoother visual transition
+            try{ ahpChart.options.animation = { duration: 260, easing: 'easeOutQuart' }; }catch(e){}
+            ahpChart.update();
+
+            renderList(results);
+            refreshMarkers(results);
+
+            // update the results summary area too
+            updateResultsSummary(results);
+            // automatically highlight top result so map/list/chart follow slider changes
+            if(results && results.length>0){
+                try{ highlightSelection(results[0].id); }catch(e){ console.warn('highlightSelection failed', e); }
+            }
+        }
+
+        // persist/load rule configuration
+        const RULES_KEY = 'ahp_expert_rules_v1';
+        function loadRuleConfig(){
+            try{
+                const raw = localStorage.getItem(RULES_KEY);
+                if(!raw) return;
+                const obj = JSON.parse(raw);
+                // apply checks
+                document.querySelectorAll('.expert-rule').forEach(ch => { ch.checked = !!obj[ch.value]; });
+                // apply bonuses
+                document.querySelectorAll('.expert-bonus').forEach(inp => { if(obj.bonuses && obj.bonuses[inp.dataset.rule]!==undefined) inp.value = obj.bonuses[inp.dataset.rule]; });
+            }catch(e){ console.warn('loadRuleConfig err', e); }
+        }
+        function saveRuleConfig(){
+            const obj = { bonuses: {} };
+            document.querySelectorAll('.expert-rule').forEach(ch => { obj[ch.value] = !!ch.checked; });
+            document.querySelectorAll('.expert-bonus').forEach(inp => { obj.bonuses[inp.dataset.rule] = parseFloat(inp.value) || 0; });
+            localStorage.setItem(RULES_KEY, JSON.stringify(obj));
+            // feedback
+            const btn = document.getElementById('saveRulesBtn');
+            if(btn){ btn.textContent = 'Đã lưu'; setTimeout(()=> btn.textContent = 'Lưu cấu hình', 1400); }
+            updateScores();
+        }
+        function resetRuleConfig(){
+            // reset to defaults
+            const defaults = { appearance: false, legalOnly: false, wideRoad: false, nearAmenity:false, noPlanning:false, onlyHouse:false, bonuses:{ appearance:0.6, wideRoad:0.5, nearAmenity:0.4, noPlanning:0.6 } };
+            document.querySelectorAll('.expert-rule').forEach(ch => { ch.checked = !!defaults[ch.value]; });
+            document.querySelectorAll('.expert-bonus').forEach(inp => { inp.value = (defaults.bonuses[inp.dataset.rule]||0); });
+            localStorage.removeItem(RULES_KEY);
+            const btn = document.getElementById('resetRulesBtn');
+            if(btn){ btn.textContent = 'Đã khôi phục'; setTimeout(()=> btn.textContent = 'Khôi phục mặc định', 1400); }
+            updateScores();
+        }
+
+        // Update the top summary cards based on current scores
+        function updateResultsSummary(results){
+            // results param optional; if not provided compute from chart data
+            let list = results || dataList.map(d=>({ ...d, score: d.score || ((d.pS+d.lS+d.fS)/3) }));
+            // ensure we have scores from chart if available
+            if(ahpChart && ahpChart.data && ahpChart.data.datasets[0]){
+                const labels = ahpChart.data.labels || [];
+                const values = ahpChart.data.datasets[0].data || [];
+                list = labels.map((lab,i)=>({ name: lab, score: values[i] }));
+            }
+            if(!list || list.length===0) return;
+
+            // best score (max)
+            const best = list.reduce((a,b)=> ( (a.score||0) >= (b.score||0) ? a : b ));
+            const bestScore = (best && best.score!==undefined) ? Number(best.score) : 0;
+            document.getElementById('resultsBestScore').textContent = (bestScore).toString();
+
+            // approximate best price: find the cheapest among top-3 scores
+            const sorted = [...(results||dataList)].sort((x,y)=> (y.score||0)-(x.score||0));
+            const top3 = sorted.slice(0,3);
+            let bestPriceText = '-';
+            if(top3.length>0){
+                const cheapest = top3.reduce((a,b)=> ( (a.price||Infinity) <= (b.price||Infinity) ? a : b ));
+                bestPriceText = (cheapest && cheapest.price) ? ((cheapest.price/1000000000).toFixed(1) + ' tỷ') : '-';
+            }
+            document.getElementById('resultsBestPrice').textContent = bestPriceText;
+
+            // satisfy count: count of properties with score >= 7 (heuristic)
+            const satisfyCount = list.filter(x=> (x.score||0) >= 7).length;
+            document.getElementById('resultsSatisfyCount').textContent = satisfyCount;
+        }
+
+        function createPinIcon(color = '#0284c7', size = 32){
+            const svg = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/>
+                </svg>`;
+            return L.divIcon({ html: svg, className: '', iconSize: [size, size], iconAnchor: [size/2, size] });
+        }
+
+        function renderList(list = dataList){
+            const el = document.getElementById('houseListScroll');
+            // build HTML with a colored score bar that matches chart coloring and width proportional to score
+            const maxScore = Math.max(...list.map(r=>Number(r.score||0)), 10);
+            el.innerHTML = list.map((r, idx) => {
+                const score = Number(r.score || (((r.pS||0)+(r.lS||0)+(r.fS||0))/3));
+                const pct = Math.round((score / (maxScore||10)) * 100);
+                // color interpolation blue -> red based on rank (top -> red)
+                const color = idx === 0 ? '#e11d48' : '#0284c7';
+                return `
+                <div class="house-card-item d-flex justify-content-between align-items-center" style="padding:12px; cursor:pointer;" data-id="${r.id}">
+                    <div class="d-flex align-items-center house-item-row">
+                        <div class="score-bar" style="background:${color}; width:${Math.max(6, Math.round(pct/100*40))}px; height:48px;"></div>
+                        <div>
+                            <div class="fw-bold">${r.name}</div>
+                            <div class="small text-muted">Vị trí: ${r.area} | Giá: ${(r.price/1000000000).toFixed(1)} Tỷ</div>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-column align-items-end">
+                        <div class="ahp-badge mb-2">${score}</div>
+                        <a href="tel:0901234567" class="phone-btn btn btn-sm" title="Gọi" style="display:inline-flex; align-items:center; justify-content:center; padding:6px; border-radius:8px; border:1px solid rgba(2,132,199,0.15); background:linear-gradient(180deg, rgba(2,132,199,0.06), rgba(2,132,199,0.02));">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24c1.12.37 2.33.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.07 21 3 13.93 3 4a1 1 0 0 1 1-1h2.5a1 1 0 0 1 1 1c0 1.24.2 2.45.57 3.57a1 1 0 0 1-.24 1.01l-2.2 2.21z" stroke="var(--brand-start)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </a>
+                    </div>
+                </div>
+            `; }).join('');
+
+            // attach click handlers
+            el.querySelectorAll('.house-card-item').forEach(item=>{
+                item.addEventListener('click', ()=>{
+                    const id = item.dataset.id;
+                    // visually highlight selected row
+                    el.querySelectorAll('.house-card-item').forEach(r=>r.classList.remove('selected'));
+                    item.classList.add('selected');
+                    selectedId = id;
+                    selectProperty(id);
+                });
+            });
+        }
+
+        function initMap(){
+            map = L.map('map').setView([10.78,106.72],11);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            dataList.forEach(d=>{
+                const icon = createPinIcon('#0284c7',28);
+                const m = L.marker([d.lat,d.lng], { icon }).addTo(map);
+                m.bindTooltip(`${(d.price/1000000000).toFixed(1)} Tỷ`, {permanent:false, direction:'top', offset:[0,-10]});
+                // show tooltip and detailed info on hover
+                m.on('mouseover', ()=>{ m.openTooltip(); showMapInfoFor(d.id); });
+                m.on('mouseout', ()=>{ m.closeTooltip(); hideMapInfo(); });
+                // click selects property
+                m.on('click', ()=> highlightSelection(d.id));
+                markersById[d.id]=m;
+            });
+        }
+
+        // show property info in floating map box and highlight corresponding bar/list
+        function showMapInfoFor(id){
+            const d = dataList.find(x=>x.id===id);
+            if(!d) return;
+            const mapInfo = document.getElementById('mapInfoBox');
+            if(mapInfo){
+                document.getElementById('mapInfoTitle').textContent = d.name || '-';
+                document.getElementById('mapInfoAddr').textContent = 'Khu vực: ' + (d.area || '-');
+                document.getElementById('mapInfoPrice').textContent = 'Giá: ' + ((d.price/1000000000).toFixed(1) + ' Tỷ');
+                mapInfo.style.display = 'block';
+            }
+            // highlight list item
+            const listEl = document.getElementById('houseListScroll');
+            if(listEl){
+                listEl.querySelectorAll('.house-card-item').forEach(r=>{ r.classList.remove('highlight-glow'); r.classList.remove('selected'); });
+                const sel = listEl.querySelector(`[data-id="${id}"]`);
+                if(sel) sel.classList.add('highlight-glow');
+            }
+            // color chart bar for this property if chart present
+            try{
+                if(ahpChart && ahpChart.data && ahpChart.data.labels){
+                    const labels = ahpChart.data.labels;
+                    const colors = labels.map(l => '#0284c7');
+                    // find index by matching name
+                    const idx = labels.findIndex(lbl => lbl === d.name || lbl.includes(d.name.split(' - ')[0]));
+                    if(idx !== -1) colors[idx] = '#e11d48';
+                    ahpChart.data.datasets[0].backgroundColor = colors;
+                    ahpChart.update();
+                }
+            }catch(e){ /* ignore chart errors */ }
+        }
+
+        function hideMapInfo(){
+            const mapInfo = document.getElementById('mapInfoBox');
+            if(mapInfo) mapInfo.style.display = 'none';
+            // remove list glow
+            const listEl = document.getElementById('houseListScroll');
+            if(listEl) listEl.querySelectorAll('.house-card-item').forEach(r=> r.classList.remove('highlight-glow'));
+            // restore chart colors based on lastResults
+            try{
+                if(ahpChart && window.lastResults){
+                    const colors = window.lastResults.map((_,i)=> i===0 ? '#e11d48' : '#0284c7');
+                    ahpChart.data.datasets[0].backgroundColor = colors;
+                    ahpChart.update();
+                }
+            }catch(e){ }
+        }
+
+        function selectProperty(id){
+            const d = dataList.find(x=>x.id===id);
+            if(!d) return;
+            const m = markersById[id];
+            if(m){
+                map.setView(m.getLatLng(), 14, { animate:true });
+                // change icon color to red for selected, reset others
+                Object.keys(markersById).forEach(k=>{
+                    const mm = markersById[k];
+                    mm.setIcon(createPinIcon(k===id? '#e11d48' : '#0284c7',28));
+                });
+                m.openPopup ? m.openPopup() : m.bindPopup(`<b>${d.name}</b><br>Giá: ${(d.price/1000000000).toFixed(1)} Tỷ`).openPopup();
+            }
+        }
+
+        // highlight selection across chart, map and sample image
+        function highlightSelection(id){
+            // 1) highlight bar in chart (make an array of colors)
+            if(ahpChart && ahpChart.data && ahpChart.data.labels){
+                const labels = ahpChart.data.labels;
+                const colors = labels.map(l => '#0284c7');
+                const idx = labels.findIndex(l => {
+                    // labels are property names; try match by id -> find index in dataList
+                    const dlIdx = dataList.findIndex(d=>d.id===id && d.name === l);
+                    return dlIdx !== -1;
+                });
+                // fallback: try match by name containing id
+                if(idx === -1){
+                    const dl = dataList.find(d=>d.id===id);
+                    if(dl){
+                        const nameIdx = labels.findIndex(lbl => lbl === dl.name || lbl.includes(dl.name.split(' - ')[0]));
+                        if(nameIdx !== -1) colors[nameIdx] = '#e11d48';
+                    }
+                } else {
+                    colors[idx] = '#e11d48';
+                }
+                // ensure at least one red if we found matching label by name
+                ahpChart.data.datasets[0].backgroundColor = colors;
+                ahpChart.update();
+            }
+
+            // --- Area selection & budget/area filter handlers ---
+            const selectedAreasKey = 'ahp_selected_areas_v1';
+            function loadSelectedAreas(){
+                try{ const raw = localStorage.getItem(selectedAreasKey); return raw? JSON.parse(raw) : ['Quận 1','Quận 7','Nhà Bè']; }catch(e){ return ['Quận 1','Quận 7','Nhà Bè']; }
+            }
+            function saveSelectedAreas(arr){ localStorage.setItem(selectedAreasKey, JSON.stringify(arr)); }
+
+            function renderAreaChips(){
+                const container = document.getElementById('areaChips'); if(!container) return;
+                const arr = loadSelectedAreas(); container.innerHTML = arr.map(a=> `<div class="badge bg-danger text-white" style="padding:8px 10px; border-radius:8px;">${a} <span data-area="${a}" class="ms-2 remove-area" style="cursor:pointer;color:#fff;">✕</span></div>`).join(' ');
+                document.getElementById('selectedAreaCount').textContent = arr.length;
+                // attach remove handlers
+                container.querySelectorAll('.remove-area').forEach(el=> el.addEventListener('click', ()=>{
+                    const area = el.dataset.area; const arr = loadSelectedAreas().filter(x=> x !== area); saveSelectedAreas(arr); renderAreaChips(); updateScores();
+                }));
+            }
+
+            function populateAreaDatalist(){
+                const dl = document.getElementById('areaList'); if(!dl) return;
+                const areas = getUniqueAreas(); dl.innerHTML = areas.map(a=> `<option value="${a}"></option>`).join('');
+            }
+
+            // add area button
+            const areaAddBtn = document.getElementById('areaAddBtn');
+            if(areaAddBtn){ areaAddBtn.addEventListener('click', ()=>{
+                const inp = document.getElementById('areaAddInput'); if(!inp) return; const v = (inp.value||'').trim(); if(!v) return; const arr = loadSelectedAreas(); if(!arr.includes(v)) arr.push(v); saveSelectedAreas(arr); renderAreaChips(); inp.value=''; updateScores();
+            }); }
+            // wire enter key on input
+            const areaAddInput = document.getElementById('areaAddInput'); if(areaAddInput) areaAddInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('areaAddBtn').click(); } });
+
+            // budget slider
+            const budgetSlider = document.getElementById('budgetSlider'); const budgetDisplay = document.getElementById('budgetDisplay');
+            if(budgetSlider && budgetDisplay){ budgetDisplay.textContent = parseFloat(budgetSlider.value).toFixed(2); budgetSlider.addEventListener('input', ()=>{ budgetDisplay.textContent = parseFloat(budgetSlider.value).toFixed(2); updateScores(); }); }
+
+            // area min/max sliders
+            const areaMin = document.getElementById('areaMin'); const areaMax = document.getElementById('areaMax'); const areaDisplay = document.getElementById('areaDisplay');
+            function updateAreaDisplay(){ if(areaDisplay && areaMin && areaMax) areaDisplay.textContent = parseFloat(areaMin.value).toFixed(2) + ' - ' + parseFloat(areaMax.value).toFixed(2); }
+            if(areaMin && areaMax){ updateAreaDisplay(); areaMin.addEventListener('input', ()=>{ if(+areaMin.value > +areaMax.value) areaMax.value = areaMin.value; updateAreaDisplay(); updateScores(); }); areaMax.addEventListener('input', ()=>{ if(+areaMax.value < +areaMin.value) areaMin.value = areaMax.value; updateAreaDisplay(); updateScores(); }); }
+
+            // initial render
+            try{ populateAreaDatalist(); renderAreaChips(); }catch(e){ console.warn('area init err', e); }
+
+            // fengshui selection persistence
+            const fengKey = 'ahp_fengshui_v1';
+            const fengEl = document.getElementById('fengshuiSelect');
+            function loadFeng(){ try{ const v = localStorage.getItem(fengKey); if(v && fengEl) fengEl.value = v; }catch(e){} }
+            function saveFeng(){ try{ if(fengEl) localStorage.setItem(fengKey, fengEl.value); }catch(e){} }
+            if(fengEl){ fengEl.addEventListener('change', ()=>{ saveFeng(); updateScores(); }); }
+            loadFeng();
+
+            // (fengshui wiring is attached at init time via global function)
+
+            // 2) center map and update marker icons
+            selectProperty(id);
+
+            // 3) update sample image to the found property if an image exists
+            const propIdx = dataList.findIndex(d=>d.id===id);
+            if(propIdx !== -1){
+                // align sampleIndex to the sample order so arrows/slider match current view
+                const order = getSampleOrder();
+                const idxInOrder = order.findIndex(x=> x === id);
+                sampleIndex = idxInOrder !== -1 ? idxInOrder : propIdx;
+                const imgEl = document.getElementById('sampleHouseImg');
+                if(imgEl){
+                    const imgNumber = ((sampleIndex) % AVAILABLE_IMAGE_COUNT) + 1;
+                    imgEl.src = `images/Nha${imgNumber}.jpg`;
+                }
+                const display = document.getElementById('sampleIndexDisplay');
+                if(display) display.textContent = `${sampleIndex+1} / ${order.length || dataList.length}`;
+                // mark in list UI
+                const listEl = document.getElementById('houseListScroll');
+                if(listEl){
+                    // remove previous glow
+                    listEl.querySelectorAll('.house-card-item').forEach(r=>{ r.classList.remove('selected'); r.classList.remove('highlight-glow'); });
+                    const sel = listEl.querySelector(`[data-id="${id}"]`);
+                    if(sel) { sel.classList.add('selected'); sel.classList.add('highlight-glow'); sel.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+                }
+                // show map info box
+                const mapInfo = document.getElementById('mapInfoBox');
+                if(mapInfo){
+                    document.getElementById('mapInfoTitle').textContent = dataList[propIdx].name || '-';
+                    document.getElementById('mapInfoAddr').textContent = 'Khu vực: ' + (dataList[propIdx].area || '-');
+                    document.getElementById('mapInfoPrice').textContent = 'Giá: ' + ((dataList[propIdx].price/1000000000).toFixed(1) + ' Tỷ');
+                    mapInfo.style.display = 'block';
+                }
+            }
+        }
+
+        function refreshMarkers(list){
+            // update popup content and ensure order not necessary for markers
+            list.forEach(d=>{
+                const m = markersById[d.id];
+                if(m) m.bindPopup(`<b>${d.name}</b><br>Điểm: ${d.score}`);
+            });
+        }
+
+        function wireUI(){
+            // Wire criterion sliders so dragging updates UI and recomputes scores in real-time
+            document.querySelectorAll('.criteria-slider').forEach(sl => {
+                const key = sl.dataset.key; // 'price' | 'l' | 'f'
+                const labelEl = document.getElementById('w-' + key);
+                const valEl = document.getElementById('val-' + key);
+                const update = (e) => {
+                    const v = e?.target?.value ?? sl.value;
+                    if(labelEl) labelEl.textContent = v + '%';
+                    if(valEl){ valEl.textContent = v + '%'; valEl.style.left = (v) + '%'; }
+                    // recompute rankings and refresh visuals
+                    try{ updateScores(); }catch(err){ console.warn('updateScores error', err); }
+                };
+                sl.addEventListener('input', update);
+                // initialize position/labels
+                try{ update({ target: sl }); }catch(e){}
+            });
+            // Re-render list using lastResults (so order/colors match chart)
+            if(window.lastResults && window.lastResults.length>0){
+                renderList(window.lastResults);
+            } else {
+                renderList();
+            }
+            // ensure chart highlights top already handled in updateScores
+            // initialize sample carousel to match AHP ranking (if any)
+            try{
+                const order = getSampleOrder();
+                const initial = order && order.length>0 ? order[0] : (dataList[0] && dataList[0].id);
+                if(initial) highlightSelection(initial);
+            }catch(e){}
+            }
+
+            // Chat handling: move the stray top-level block into a function and wire UI events
+            function processChatInput(rawTxt){
+                const txt = (rawTxt||'').trim();
+                if(!txt) return;
+                const now = new Date().toLocaleString();
+                chatLog.push({ time: now, role: 'KH', text: txt });
+                appendChat('KH', txt);
+
+                // If the user only greeted, reply with a greeting + offer help (don't suggest properties)
+                const low = txt.toLowerCase();
+                const isGreeting = /^(hi|hello|chào|xin chào|chao|chào bạn|chào anh|chào chị)\b/i.test(txt) || /\b(chào|xin chào|hi|hello)\b/i.test(low);
+                if(isGreeting){
+                    const reply = 'Xin chào 👋! Tôi có thể giúp gì cho bạn?';
+                    const t = new Date().toLocaleString();
+                    chatLog.push({ time: t, role: 'AI', text: reply });
+                    appendChat('AI', reply);
+                    return;
+                }
+
+                // Try to detect if user asked about a district/area
+                const areaRequested = extractAreaFromText(txt);
+                if(areaRequested){
+                    const matches = searchByArea(areaRequested);
+                    if(matches.length===0){
+                        // no matches -> suggest nearby districts
+                        const suggestions = suggestNearbyDistricts(areaRequested, 3);
+                        const reply = `Rất tiếc, hiện không có nhà tại "${areaRequested}" theo yêu cầu. Gợi ý các quận/khu vực gần hoặc tương tự: ${suggestions.join(', ')}.`;
+                        const t = new Date().toLocaleString();
+                        chatLog.push({ time: t, role: 'AI', text: reply });
+                        appendChat('AI', reply);
+                        return;
+                    } else {
+                        // there are matches -> show top suggestion
+                        const top = matches[0];
+                        const reply = `Tìm thấy ${matches.length} kết quả tại "${areaRequested}". Gợi ý: ${top.name} — Giá ${(top.price/1000000000).toFixed(1)} Tỷ, Điểm ${(top.pS+top.lS+top.fS)/3}`;
+                        const t = new Date().toLocaleString();
+                        chatLog.push({ time: t, role: 'AI', text: reply });
+                        appendChat('AI', reply);
+                        // highlight the chosen property across UI
+                        highlightSelection(top.id);
+                        return;
+                    }
+                }
+
+                // fallback simple AI reply simulation for other queries
+                setTimeout(()=>{
+                    // detect price-focused requests
+                    const priceIntent = /giá tốt|giá rẻ|tìm nhà giá tốt|giá ưu|giá hợp lý|giá tốt tiện ích/i.test(txt);
+                    if(priceIntent){
+                        // temporarily favor price by adjusting sliders to weight price higher
+                        const sP = document.getElementById('slider-price');
+                        const sL = document.getElementById('slider-l');
+                        const sF = document.getElementById('slider-f');
+                        // save old
+                        const old = { p: sP.value, l: sL.value, f: sF.value };
+                        // set to favor price
+                        sP.value = 70; sL.value = 15; sF.value = 15;
+                        document.getElementById('w-price').textContent = sP.value + '%';
+                        document.getElementById('w-l').textContent = sL.value + '%';
+                        document.getElementById('w-f').textContent = sF.value + '%';
+                        document.getElementById('val-price').textContent = sP.value + '%';
+                        document.getElementById('val-l').textContent = sL.value + '%';
+                        document.getElementById('val-f').textContent = sF.value + '%';
+                        // recompute
+                        updateScores();
+                        // pick top
+                        const top = (window.lastResults && window.lastResults.length>0) ? window.lastResults[0] : null;
+                        if(top){
+                            highlightSelection(top.id);
+                            const reply = `Tôi đã tìm theo tiêu chí giá tốt — gợi ý: ${top.name} — Giá ${(top.price/1000000000).toFixed(1)} Tỷ, Điểm ${top.score}`;
+                            const t = new Date().toLocaleString();
+                            chatLog.push({ time: t, role: 'AI', text: reply });
+                            appendChat('AI', reply);
+                        }
+                        // restore sliders after short delay
+                        setTimeout(()=>{
+                            sP.value = old.p; sL.value = old.l; sF.value = old.f;
+                            document.getElementById('w-price').textContent = old.p + '%';
+                            document.getElementById('w-l').textContent = old.l + '%';
+                            document.getElementById('w-f').textContent = old.f + '%';
+                            document.getElementById('val-price').textContent = old.p + '%';
+                            document.getElementById('val-l').textContent = old.l + '%';
+                            document.getElementById('val-f').textContent = old.f + '%';
+                            updateScores();
+                        }, 1200);
+                        return;
+                    }
+
+                    const reply = `Dựa trên dữ liệu, tôi gợi ý ${dataList[0].name} là lựa chọn tốt. Điểm: ${ahpChart.data.datasets[0].data[0]}`;
+                    const t = new Date().toLocaleString();
+                    chatLog.push({ time: t, role: 'AI', text: reply });
+                    appendChat('AI', reply);
+                }, 600);
+            }
+
+            // wire chat UI to button and Enter key
+            const chatBtn = document.getElementById('chatSendBtn');
+            if(chatBtn) chatBtn.addEventListener('click', ()=>{
+                const inp = document.getElementById('chatInput');
+                if(!inp) return; processChatInput(inp.value); inp.value = '';
+            });
+            const chatInputEl = document.getElementById('chatInput');
+            if(chatInputEl) chatInputEl.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); processChatInput(chatInputEl.value); chatInputEl.value = ''; } });
+
+            // wire export button to save chat history as Excel
+            const exportBtn = document.getElementById('exportChatBtn');
+            if(exportBtn) exportBtn.addEventListener('click', ()=>{ try{ exportChatExcel(); }catch(e){ alert('Lỗi khi xuất file: '+ (e && e.message)); } });
+
+        function appendChat(who, text){
+            const box = document.getElementById('chatDisplay');
+            const html = `<div class="mb-2 ${who==='AI'?'text-start':'text-end'}"><div class="d-inline-block p-2 rounded ${who==='AI'?'bg-white':'bg-primary text-white'}" style="max-width:85%;">${text}</div><div class="small text-muted">${who} - ${new Date().toLocaleTimeString()}</div></div>`;
+            box.innerHTML += html; box.scrollTop = box.scrollHeight;
+        }
+
+        // init global fengshui dropdown wiring so caret and label click work reliably
+        function initFengDropdown(){
+            try{
+                const fengKey = 'ahp_fengshui_v1';
+                const fengEl = document.getElementById('fengshuiSelect');
+                const toggle = document.getElementById('fengToggleBtn');
+                const caret = document.getElementById('fengCaretBtn');
+                const panel = document.getElementById('fengPanel');
+                const label = document.getElementById('fengToggleLabel');
+                const applyBtn = document.getElementById('fengApplyBtn');
+                const clearBtn = document.getElementById('fengClearBtn');
+
+                function loadFeng(){ try{ const v = localStorage.getItem(fengKey); if(v && fengEl) fengEl.value = v; }catch(e){} }
+                function saveFeng(){ try{ if(fengEl) localStorage.setItem(fengKey, fengEl.value); }catch(e){} }
+                loadFeng();
+
+                function closePanel(){ if(panel){ panel.style.display='none'; panel.setAttribute('aria-hidden','true'); } }
+                function openPanel(){ if(panel){ panel.style.display='block'; panel.setAttribute('aria-hidden','false');
+                        // ensure active item is visible
+                        try{ const active = panel.querySelector('.list-group-item.active'); if(active) active.scrollIntoView({ block:'nearest' }); }catch(e){}
+                    } }
+
+                // ensure label shows current value
+                try{ if(label){ label.textContent = (fengEl && fengEl.value && fengEl.value!=='all') ? fengEl.value : 'Tất cả'; } }catch(e){}
+
+                if(toggle) toggle.addEventListener('click', (e)=>{ e.stopPropagation(); if(panel && panel.style.display==='block') closePanel(); else openPanel(); });
+                if(caret) caret.addEventListener('click', (e)=>{ e.stopPropagation(); if(panel && panel.style.display==='block') closePanel(); else openPanel(); });
+                // also allow clicking the label area to open
+                if(label){ label.addEventListener('click', (e)=>{ e.stopPropagation(); if(panel && panel.style.display==='block') closePanel(); else openPanel(); }); }
+
+                // option clicks — apply immediately when user clicks an option
+                if(panel){ panel.querySelectorAll('.list-group-item').forEach(item=>{
+                    item.addEventListener('click', ()=>{
+                        const v = item.dataset.val || item.getAttribute('data-val');
+                        const val = v || 'all';
+                        if(fengEl) fengEl.value = val;
+                        saveFeng();
+                        if(label) label.textContent = val === 'all' ? 'Tất cả' : val;
+                        panel.querySelectorAll('.list-group-item').forEach(i=> i.classList.remove('active'));
+                        item.classList.add('active');
+                        try{ updateScores(); }catch(e){}
+                        closePanel();
+                    });
+                }); }
+
+                // set initial active item based on saved value
+                try{
+                    if(panel && fengEl && fengEl.value){
+                        panel.querySelectorAll('.list-group-item').forEach(i=> i.classList.remove('active'));
+                        const sel = panel.querySelector(`[data-val="${fengEl.value}"]`);
+                        if(sel) sel.classList.add('active');
+                    }
+                }catch(e){}
+
+                if(applyBtn) applyBtn.addEventListener('click', ()=>{ if(fengEl) fengEl.value = fengEl.value; saveFeng(); if(label) label.textContent = (fengEl && fengEl.value==='all') ? 'Tất cả' : (fengEl? fengEl.value : ''); updateScores(); closePanel(); });
+                if(clearBtn) clearBtn.addEventListener('click', ()=>{ if(fengEl) fengEl.value = 'all'; saveFeng(); if(label) label.textContent = 'Tất cả'; updateScores(); closePanel(); });
+
+                // close on outside click
+                document.addEventListener('click', (e)=>{ try{ if(panel && panel.style.display==='block' && !panel.contains(e.target) && !(toggle && toggle.contains(e.target)) && !(caret && caret.contains(e.target))) closePanel(); }catch(err){} });
+            }catch(err){ console.warn('initFengDropdown err', err); }
+        }
+
+        // Helper: get unique area names from dataList
+        function getUniqueAreas(){
+            const s = new Set();
+            dataList.forEach(d=>{ if(d.area) s.add(d.area.trim()); });
+            return Array.from(s);
+        }
+
+        function normalizeText(t){ return (t||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, ''); }
+
+        // Levenshtein distance for simple string similarity
+        function levenshtein(a,b){
+            a = a||''; b = b||'';
+            const m = a.length, n = b.length;
+            const dp = Array.from({length:m+1}, ()=> new Array(n+1).fill(0));
+            for(let i=0;i<=m;i++) dp[i][0]=i;
+            for(let j=0;j<=n;j++) dp[0][j]=j;
+            for(let i=1;i<=m;i++) for(let j=1;j<=n;j++){
+                const cost = a[i-1]===b[j-1]?0:1;
+                dp[i][j] = Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+cost);
+            }
+            return dp[m][n];
+        }
+
+        // Suggest nearby districts by string similarity (top N)
+        function suggestNearbyDistricts(requestedArea, topN=3){
+            if(!requestedArea) return [];
+            const areas = getUniqueAreas();
+            const req = normalizeText(requestedArea);
+            const scored = areas.map(a=>({ area: a, d: levenshtein(normalizeText(a), req) }));
+            scored.sort((x,y)=>x.d - y.d);
+            return scored.slice(0, topN).map(s=>s.area);
+        }
+
+        function searchByArea(area){
+            if(!area) return [];
+            const req = normalizeText(area);
+            return dataList.filter(d=> normalizeText(d.area).includes(req));
+        }
+
+        function extractAreaFromText(text){
+            if(!text) return null;
+            const t = text.trim();
+            // try patterns like 'quận 7' or 'quan 7'
+            const qnum = t.match(/quận\s*(\d{1,2})/i) || t.match(/quan\s*(\d{1,2})/i);
+            if(qnum) return 'Quận ' + qnum[1];
+            // try to find a known area name inside the text
+            const areas = getUniqueAreas();
+            const low = normalizeText(t);
+            for(const a of areas){ if(low.includes(normalizeText(a))) return a; }
+            return null;
+        }
+
+        function exportChatExcel(){
+            if(chatLog.length===0) return alert('Không có dữ liệu chat để xuất.');
+            const ws = XLSX.utils.json_to_sheet(chatLog);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'ChatLog');
+            const name = (document.getElementById('custName').value || 'Khach') .replace(/\s+/g,'_');
+            XLSX.writeFile(wb, `ChatLog_AHP_${name}.xlsx`);
+        }
+
+    // Collection/gallery features removed per user revert request.
+
+        function loadSampleCarousel(){
+            // prepare slider control and image fade
+            const imgEl = document.getElementById('sampleHouseImg');
+            const slider = document.getElementById('sampleSlider');
+            const display = document.getElementById('sampleIndexDisplay');
+            sampleIndex = 0;
+            // how many sample images are actually present in the images/ folder
+            const AVAILABLE_IMAGE_COUNT = 6; // adjust if more images added
+
+            // helper to get the current sample order: prefer AHP ranking (lastResults)
+            const getSampleOrder = ()=>{
+                if(window.lastResults && window.lastResults.length>0) return window.lastResults.map(r=>r.id);
+                return dataList.map(d=>d.id);
+            };
+
+            let fadeTimer = null;
+
+            const updateDisplay = ()=>{
+                const currentOrder = getSampleOrder();
+                display.textContent = `${sampleIndex+1} / ${currentOrder.length}`;
+            };
+
+            const setIdx = (i)=>{
+                const currentOrder = getSampleOrder();
+                if(currentOrder.length===0) return;
+                const next = ((i % currentOrder.length) + currentOrder.length) % currentOrder.length;
+                if(next === sampleIndex) return;
+                console.log('sample.setIdx next=', next, 'currentOrderLen=', currentOrder.length);
+                imgEl.classList.add('fading');
+                clearTimeout(fadeTimer);
+                fadeTimer = setTimeout(()=>{
+                    sampleIndex = next;
+                    const id = currentOrder[sampleIndex];
+                    // pick an available image using the visible sampleIndex (safe mapping)
+                    const imgNumber = ((sampleIndex) % AVAILABLE_IMAGE_COUNT) + 1;
+                    const nextSrc = `images/Nha${imgNumber}.jpg`;
+                    imgEl.src = nextSrc;
+                    imgEl.alt = `Nhà mẫu ${imgNumber} - ${id}`;
+                    // keep slider in-range for current order
+                    slider.max = Math.max(0, currentOrder.length-1);
+                    slider.value = sampleIndex;
+                    updateDisplay();
+                    // update caption text to reflect current property
+                    const capTitle = document.getElementById('sampleCaptionTitle');
+                    const capSub = document.getElementById('sampleCaptionSub');
+                    if(capTitle) capTitle.textContent = dataList.find(dd=>dd.id===id)?.name || id;
+                    if(capSub){ const dd = dataList.find(x=>x.id===id) || {}; capSub.textContent = `Vị trí: ${dd.area || '-'} | Giá: ${dd.price? (dd.price/1000000000).toFixed(1) + ' Tỷ' : '-'}`; }
+                    // visually select in the main list and highlight across UI
+                    const listEl = document.getElementById('houseListScroll');
+                    if(listEl){
+                        listEl.querySelectorAll('.house-card-item').forEach(r=>r.classList.remove('selected'));
+                        const sel = listEl.querySelector(`[data-id="${id}"]`);
+                        if(sel) sel.classList.add('selected');
+                    }
+                    console.log('sample.show id=', id, 'img.src=', imgEl.src);
+                    highlightSelection(id);
+                    requestAnimationFrame(()=> imgEl.classList.remove('fading'));
+                }, 220);
+            };
+
+            // wire controls
+            document.getElementById('samplePrev').addEventListener('click', ()=> setIdx(sampleIndex-1));
+            document.getElementById('sampleNext').addEventListener('click', ()=> setIdx(sampleIndex+1));
+            document.getElementById('samplePrevSmall').addEventListener('click', ()=> setIdx(sampleIndex-1));
+            document.getElementById('sampleNextSmall').addEventListener('click', ()=> setIdx(sampleIndex+1));
+            imgEl.addEventListener('click', ()=> {
+                const currentOrder = getSampleOrder();
+                const id = currentOrder[sampleIndex] || dataList[sampleIndex].id;
+                highlightSelection(id);
+            });
+
+            // wire detail + select buttons
+            const detailBtn = document.getElementById('sampleDetailBtn');
+            const viewBtn = document.getElementById('sampleViewBtn');
+            if(detailBtn){
+                detailBtn.addEventListener('click', ()=>{
+                    // populate modal with details for the currently shown property
+                    const currentOrder = getSampleOrder();
+                    const id = currentOrder[sampleIndex] || dataList[sampleIndex].id;
+                    const d = dataList.find(x=>x.id===id) || {};
+                    // fill modal
+                    document.getElementById('modalHouseTitle').textContent = d.name || '-';
+                    document.getElementById('modalHouseArea').textContent = d.area || '-';
+                    document.getElementById('modalHousePrice').textContent = (d.price? (d.price/1000000000).toFixed(1) + ' Tỷ' : '-');
+                    document.getElementById('modalHouseScores').textContent = `Hình thể: ${d.pS} | Vị trí: ${d.lS} | Tiện ích/Pháp lý: ${d.fS}`;
+                    document.getElementById('modalHouseImg').src = imgEl.src;
+                    // open modal
+                    const bsModal = new bootstrap.Modal(document.getElementById('houseDetailModal'));
+                    bsModal.show();
+                });
+            }
+            if(viewBtn){ viewBtn.addEventListener('click', ()=>{
+                const currentOrder = getSampleOrder();
+                const id = currentOrder[sampleIndex] || dataList[sampleIndex].id;
+                highlightSelection(id);
+            }); }
+
+            // fallback handler if an image is missing -> show first sample as safe default
+            imgEl.onerror = ()=>{ imgEl.onerror = null; imgEl.src = 'images/Nha1.jpg'; };
+
+            slider.addEventListener('input', (e)=>{
+                const idx = +e.target.value;
+                setIdx(idx);
+            });
+
+            // initialize display and ensure first sample item selected (AHP top if available)
+            const initialOrder = getSampleOrder();
+            slider.max = Math.max(0, initialOrder.length - 1);
+            slider.value = 0;
+            updateDisplay();
+            const listElInit = document.getElementById('houseListScroll');
+            if(listElInit) listElInit.querySelectorAll('.house-card-item').forEach(r=>r.classList.remove('selected'));
+            if(initialOrder.length>0) highlightSelection(initialOrder[0]);
+        }
+
+    // wire modal contact button after modal is inserted
+    (function wireModalContact(){
+        document.addEventListener('DOMContentLoaded', ()=>{
+            const modalContact = document.getElementById('modalContactBtn');
+            if(modalContact){
+                modalContact.addEventListener('click', ()=>{
+                    // simple action: open phone dialer
+                    window.location.href = 'tel:0977704394';
+                });
+            }
+        });
+    })();
+
+    // --- Modal for house details (inserted by patch) ---
+    // create modal markup at end of body
+
+        window.onload = initApp;
+    </script>
+    
+            <!-- House detail modal -->
+            <div class="modal fade" id="houseDetailModal" tabindex="-1" aria-labelledby="houseDetailModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="houseDetailModalLabel">Chi tiết nhà</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <img id="modalHouseImg" src="images/Nha1.jpg" alt="Hình nhà" class="img-fluid rounded">
+                                </div>
+                                <div class="col-md-6">
+                                    <h5 id="modalHouseTitle">PA1 - Chung cư (Quận 6)</h5>
+                                    <div class="small text-muted mb-2" id="modalHouseArea">Quận 6</div>
+                                    <div class="fw-bold mb-2" id="modalHousePrice">3.2 Tỷ</div>
+                                    <div id="modalHouseScores" class="mb-3">Hình thể: 10 | Vị trí: 8 | Tiện ích/Pháp lý: 8</div>
+                                    <div id="modalHouseDesc" class="small text-muted">Mô tả: Nhà mẫu đầy đủ tiện nghi; gần chợ, trường học và khu thương mại. Thích hợp gia đình trẻ. Liên hệ để biết thêm chi tiết.</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                            <button type="button" class="btn btn-primary" id="modalContactBtn">Liên hệ</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </body>
+    </html>

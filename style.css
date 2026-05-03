@@ -1,0 +1,25 @@
+/* style.css - basic placeholder for your project
+   Move inline styles from index.html here if you want to cleanly separate presentation.
+   Keep this file in the root of the project as requested.
+*/
+
+:root{
+    --brand-start:#1589e8fe;
+    --brand-end:#0369a1;
+}
+body{ background:#f3f6f9; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial; }
+
+/*  Định dạng hình nhà mẫu: any additional styles from index.html <style> block into this file when ready */
+.house-card-img {
+    height: 220px;
+    width: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.3s ease; /* Thêm hiệu ứng cho mượt */
+}
+
+.house-card-img:hover {
+    filter: brightness(90%); /* Tối đi một chút khi di chuột vào */
+    transform: scale(1.02); /* Phóng lớn nhẹ */
+}

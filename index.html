@@ -14,7 +14,8 @@
         <meta property="og:type" content="website">
         <meta property="og:title" content="Hệ Thống AHP - Tư vấn chọn nhà phố">
         <meta property="og:description" content="Dùng AHP để xếp hạng và gợi ý nhà phù hợp theo trọng số khách hàng. Hiển thị biểu đồ, danh sách, bản đồ và chatbot tư vấn.">
-        <meta property="og:image" content="images/logo.jpg">
+       
+        <meta property="og:image" content="./images/logo.png">
         <meta property="og:url" content="https://your-domain.example/">
         <meta name="twitter:card" content="summary_large_image">
 
@@ -115,7 +116,8 @@
     <nav class="navbar navbar-expand-lg navbar-dark navbar-brand-bar">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="#">
-                <img src="images/logo.jpg" alt="Logo DHTNMT" class="logo-img me-3" onerror="this.onerror=null; this.src='images/logo.jpg'">
+                <img src="images/logo.png" alt="Logo DHTNMT" class="logo-img me-3" onerror="this.onerror=null; this.src='images/logo.png'">
+                
                 <div class="d-flex flex-column text-white">
                     <div style="font-size:0.85rem; font-weight:700; letter-spacing:0.6px; text-transform: uppercase;">Bộ Tài Nguyên và Môi Trường</div>
                     <strong style="font-size:1.1rem; margin-top:2px;">ĐẠI HỌC TÀI NGUYÊN & MÔI TRƯỜNG TP.HCM</strong>
@@ -133,7 +135,7 @@
                     <li class="nav-item ms-3"><a class="btn btn-outline-light btn-sm" href="#">Tải báo cáo</a></li>
                     <li class="nav-item ms-4">
                         <a class="nav-link d-flex align-items-center" href="tel:0977704394" style="font-weight:700; color:#ffd54a;">
-                            <svg class="nav-phone-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <svg class="nav-phone-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/jpg" aria-hidden="true">
                                 <path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24c1.12.37 2.33.57 3.57.57a1 1 0 011 1V20a1 1 0 01-1 1C10.07 21 3 13.93 3 4a1 1 0 011-1h2.5a1 1 0 011 1c0 1.24.2 2.45.57 3.57a1 1 0 01-.24 1.01l-2.2 2.21z" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                             <span style="margin-left:8px;">0977-704-394</span>
@@ -210,11 +212,11 @@
                 <div class="card card-custom p-3 mb-3">
             <div class="position-relative sample-card">
                 <img id="sampleHouseImg" 
-     src="images/nha1.jpg" 
+     src="./images/nha1.png" 
      class="img-fluid house-card-img" 
      alt="Mô tả căn nhà số 1">            
                 
-                            /*<div class="carousel-caption" style="left:0; right:0; bottom:72px; margin:0 auto; width:fit-content; background: rgba(0,0,0,0.55); padding:10px 20px; border-radius:8px; z-index:6;">Xem nhà mẫu</div>*/
+                            
                             <button id="samplePrev" class="btn btn-dark" style="position:absolute; left:8px; top:50%; transform:translateY(-50%); opacity:0.95;">◀</button>
                             <button id="sampleNext" class="btn btn-dark" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); opacity:0.95;">▶</button>
                 <div style="position:absolute; left:0; right:0; bottom:12px; padding:0 12px;">
@@ -1042,7 +1044,7 @@
                 const imgEl = document.getElementById('sampleHouseImg');
                 if(imgEl){
                     const imgNumber = ((sampleIndex) % AVAILABLE_IMAGE_COUNT) + 1;
-                    imgEl.src = `images/nha${imgNumber}.jpg`;
+                    imgEl.src = `./images/nha${imgNumber}.png`;
                 }
                 const display = document.getElementById('sampleIndexDisplay');
                 if(display) display.textContent = `${sampleIndex+1} / ${order.length || dataList.length}`;
@@ -1379,8 +1381,13 @@
                     const id = currentOrder[sampleIndex];
                     // pick an available image using the visible sampleIndex (safe mapping)
                     const imgNumber = ((sampleIndex) % AVAILABLE_IMAGE_COUNT) + 1;
-                    const nextSrc = `images/nha${imgNumber}.jpg`;
-                    imgEl.src = nextSrc;
+                    const pngSrc = `./images/nha${imgNumber}.png`;
+                    const jpgSrc = `./images/nha${imgNumber}.jpg`;
+                    // try png first, fallback to jpg if png missing
+                    imgEl.onerror = function(){
+                        try{ this.onerror = null; if(this.src && this.src.endsWith('.png')){ this.src = jpgSrc; } }catch(e){}
+                    };
+                    imgEl.src = pngSrc;
                     imgEl.alt = `Nhà mẫu ${imgNumber} - ${id}`;
                     // keep slider in-range for current order
                     slider.max = Math.max(0, currentOrder.length-1);
@@ -1441,8 +1448,8 @@
                 highlightSelection(id);
             }); }
 
-            // fallback handler if an image is missing -> show first sample as safe default
-            imgEl.onerror = ()=>{ imgEl.onerror = null; imgEl.src = 'images/nha1.jpg'; };
+            // fallback handler if an image is missing -> try png then jpg for first sample
+            imgEl.onerror = function(){ try{ this.onerror = null; if(this.src && this.src.endsWith('.png')){ this.src = './images/nha1.png'; } else { this.src = './images/nha1.png'; } }catch(e){} };
 
             slider.addEventListener('input', (e)=>{
                 const idx = +e.target.value;
@@ -1489,7 +1496,7 @@
                         <div class="modal-body">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <img id="modalHouseImg" src="images/nha1.jpg" alt="Hình nhà" class="img-fluid rounded">
+                                    <img id="modalHouseImg" src="./images/nha1.png" alt="Hình nhà" class="img-fluid rounded" onerror="this.onerror=null; if(this.src && this.src.endsWith('.png')) this.src=this.src.replace('.png','.jpg');" />
                                 </div>
                                 <div class="col-md-6">
                                     <h5 id="modalHouseTitle">PA1 - Chung cư (Quận 6)</h5>
